@@ -1,0 +1,51 @@
+{
+  "archinstall-language": "English",
+  "audio_config": {
+    "audio": "pipewire"
+  },
+  "bootloader": "Grub",
+  "hostname": "archlinux",
+  "kernels": [
+    "linux"
+  ],
+  "locale_config": {
+    "kb_layout": "us",
+    "sys_enc": "UTF-8",
+    "sys_lang": "en_US.UTF-8"
+  },
+  "mirror_config": {
+    "mirror_regions": {
+      "China": [
+        "http://mirrors.163.com/archlinux/$repo/os/$arch",
+        "http://mirrors.aliyun.com/archlinux/$repo/os/$arch",
+        "http://mirrors.ustc.edu.cn/archlinux/$repo/os/$arch"
+      ]
+    },
+    "optional_repositories": [
+      "multilib"
+    ]
+  },
+  "network_config": {
+    "type": "iso"
+  },
+  "packages": [
+    "neovim",
+    "git",
+    "stow",
+    "wezterm"
+  ],
+  "profile_config": {
+    "gfx_driver": "All open-source",
+    "greeter": "ly",
+    "profile": {
+      "custom_settings": {
+        "Qtile": {}
+      },
+      "details": [
+        "Qtile"
+      ],
+      "main": "Desktop"
+    }
+  },
+  "timezone": "Asia/Shanghai"
+}

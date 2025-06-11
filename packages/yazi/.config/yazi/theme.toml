@@ -1,0 +1,11 @@
+"$schema" = "https://yazi-rs.github.io/schemas/theme.json"
+
+[mode]
+normal_main = { bg = "white", bold = true }
+normal_alt  = { fg = "black", bg = "gray" }
+
+[filetype]
+rules = [
+	# Fallback
+	{ name = "*/", fg = "gray" }
+]
