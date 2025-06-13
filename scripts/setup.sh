@@ -92,8 +92,9 @@ Dotfiles Setup Script
 Usage: $0 [OPTIONS] [PACKAGES...]
 
 Options:
-  --all      Deploy all available packages
-  --help     Show this help message
+  --all         Deploy all available packages
+  --home-dir    Specify the home directory
+  --help        Show this help message
 
 Available packages:
 $(find "${STOW_DIR}" -mindepth 1 -maxdepth 1 -type d -printf '  - %f\n')

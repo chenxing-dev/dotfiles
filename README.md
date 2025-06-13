@@ -58,7 +58,7 @@ dotfiles/
 
 ```bash
 # Deploy all configurations
-./scripts/setup.sh --all
+./scripts/setup.sh --all --home-dir /home/user
 
 # Deploy specific packages
 ./scripts/setup.sh qtile wezterm yazi
