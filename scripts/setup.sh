@@ -8,10 +8,11 @@ set -euo pipefail
 
 # Configuration
 # Get repository root directory
+HOME_DIR=${HOME}
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-BACKUP_DIR="${HOME}/dotfiles_backup"
+BACKUP_DIR="${HOME_DIR}/dotfiles_backup"
 STOW_DIR="${REPO_ROOT}/packages"
-STOW_CMD="stow --verbose=1 --dir=${STOW_DIR} --target=${HOME}"
+STOW_CMD="stow --verbose=1 --dir=${STOW_DIR} --target=${HOME_DIR}"
 SCRIPT_DIR="${REPO_ROOT}/scripts"
 declare -a PACKAGES=()
 ALL=false
@@ -53,7 +54,7 @@ backup_files() {
 
     # Find and backup existing files
     while IFS= read -r -d $'\0' file; do
-        local target_file="${HOME}/${file}"
+        local target_file="${HOME_DIR}/${file}"
         if [[ -e "${target_file}" ]]; then
             local backup_file="${backup_path}/${file}"
             mkdir -p "$(dirname "${backup_file}")"
@@ -105,6 +106,12 @@ while [[ $# -gt 0 ]]; do
     --all)
         ALL=true
         shift
+        ;;
+    --home-dir)
+        HOME_DIR="$2"
+        BACKUP_DIR="${HOME_DIR}/dotfiles_backup"
+        STOW_CMD="stow --verbose=1 --dir=${STOW_DIR} --target=${HOME_DIR}"
+        shift 2
         ;;
     --help)
         show_help
