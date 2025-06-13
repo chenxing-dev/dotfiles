@@ -39,7 +39,8 @@
     "noto-fonts-cjk",
     "noto-fonts-emoji",
     "fcitx5-material-color",
-    "dunst"
+    "dunst",
+    "python-iwlib"
   ],
   "profile_config": {
     "gfx_driver": "All open-source",
