@@ -7,10 +7,12 @@
 set -euo pipefail
 
 # Configuration
+# Get repository root directory
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BACKUP_DIR="${HOME}/dotfiles_backup"
-STOW_DIR="packages"
+STOW_DIR="${REPO_ROOT}/packages"
 STOW_CMD="stow --verbose=1 --dir=${STOW_DIR} --target=${HOME}"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" # the absolute path of the directory containing the script
+SCRIPT_DIR="${REPO_ROOT}/scripts"
 declare -a PACKAGES=()
 ALL=false
 
