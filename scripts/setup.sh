@@ -44,24 +44,31 @@ install_stow() {
 
 backup_files() {
     local package="$1"
-    info "Backing up existing ${package} files..."
+    info "Checking for existing ${package} files to backup..."
 
     local backup_path
     backup_path="${BACKUP_DIR}/${package}_$(date +%Y%m%d_%H%M%S)"
-    mkdir -p "${backup_path}"
+    local backup_created=false
+    mkdir -p "${backup_path}" || error "Failed to create backup directory"
 
-    cd "${STOW_DIR}/${package}" || error "Package directory not found"
-
-    find . -type f | while read -r file; do
+    # Find and backup existing files
+    while IFS= read -r -d $'\0' file; do
         local target_file="${HOME}/${file}"
-        if [[ -f "${target_file}" ]]; then
+        if [[ -e "${target_file}" ]]; then
             local backup_file="${backup_path}/${file}"
             mkdir -p "$(dirname "${backup_file}")"
-            cp -v "${target_file}" "${backup_file}" || warn "Failed to backup ${target_file}"
+            cp -a -- "${target_file}" "${backup_file}" || warn "Failed to backup ${target_file}"
+            backup_created=true
         fi
-    done
+    done < <(cd "${STOW_DIR}/${package}" && find . -type f -print0)
 
-    cd "${SCRIPT_DIR}" || return
+    # Remove backup directory if no files were backed up
+    if ! $backup_created; then
+        rmdir "${backup_path}" 2>/dev/null
+        info "No existing ${package} files found - no backup created"
+    else
+        info "Backup of ${package} completed to ${backup_path}"
+    fi
 }
 
 stow_package() {

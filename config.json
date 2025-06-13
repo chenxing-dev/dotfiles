@@ -29,10 +29,17 @@
     "type": "iso"
   },
   "packages": [
-    "neovim",
     "git",
     "stow",
-    "wezterm"
+    "wezterm",
+    "yazi",
+    "picom",
+    "fcitx5-im",
+    "fcitx5-chinese-addons",
+    "noto-fonts-cjk",
+    "noto-fonts-emoji",
+    "fcitx5-material-color",
+    "dunst"
   ],
   "profile_config": {
     "gfx_driver": "All open-source",
