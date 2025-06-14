@@ -4,8 +4,11 @@
 BOOKMARKS_FILE="$HOME/.config/rofi/bookmarks.txt"
 [ -f "$BOOKMARKS_FILE" ] || exit 1
 
+# Create arrays for display and actual URLs
+declare -a display_items
+declare -a actual_urls
+
 # Process bookmarks with flexible formatting
-declare -a bookmarks
 while IFS= read -r line; do
     # Skip empty lines
     [ -z "$line" ] && continue
@@ -15,35 +18,40 @@ while IFS= read -r line; do
         # Format: Display Name | URL
         name=$(echo "$line" | awk -F'|' '{print $1}' | xargs -0)
         url=$(echo "$line" | awk -F'|' '{print $2}' | xargs)
-        # Only add pipe if both name and URL exist
-        if [[ -n "$name" && -n "$url" ]]; then
-            bookmarks+=("$name | $url")
-        elif [[ -n "$url" ]]; then
-            # Only URL exists - display URL alone
-            bookmarks+=("$url")
+
+        # Only add if URL exists
+        if [[ -n "$url" ]]; then
+            display_items+=("$name | $url")
+            actual_urls+=("$url")
         fi
     else
-        # Only URL provided - display URL alone
+        # URL only
         url=$(echo "$line" | xargs)
-        bookmarks+=("$url")
+        display_items+=("$url")
+        actual_urls+=("$url")
     fi
+done < <(grep -v '^#' "$BOOKMARKS_FILE")
 
-done <"$BOOKMARKS_FILE"
+# Display with Rofi
+selection=$(printf '%s\n' "${display_items[@]}" | rofi -dmenu -p "Bookmarks")
 
-selection=$(printf '%s\n' "${bookmarks[@]}" | rofi -dmenu -p "Bookmarks")
+# Find the index of the selected item
+for i in "${!display_items[@]}"; do
+    if [[ "${display_items[$i]}" == "$selection" ]]; then
+        actual_url="${actual_urls[$i]}"
+        break
+    fi
+done
 
-# Extract URL from original line (not shortened)
-line_match=$(grep -F -m 1 "${selection%%|*}" <(grep -v '^#' "$BOOKMARKS_FILE"))
-if [[ "$line_match" == *"|"* ]]; then
-    url=$(echo "$line_match" | awk -F'|' '{print $2}' | xargs)
-else
-    url="$selection"
+# custom URL
+if [[ -z "$actual_url" ]]; then
+    actual_url=$selection
 fi
 
-if [ -n "$url" ]; then
+if [ -n "$actual_url" ]; then
     # Add protocol if missing
-    if [[ ! "$url" =~ ^(http|https|ftp):// ]]; then
-        url="https://$url"
+    if [[ ! "$actual_url" =~ ^(http|https|ftp):// ]]; then
+        actual_url="https://$actual_url"
     fi
-    xdg-open "$url"
+    xdg-open "$actual_url"
 fi
