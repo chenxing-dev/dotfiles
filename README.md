@@ -1,5 +1,3 @@
-# Dotfiles
-
 ![Dotfiles Preview](./screenshot.png)  
 
 ## Overview
@@ -35,10 +33,11 @@ dotfiles/
 
 2. **Boot into live environment**
 
-3. **Run archinstall with config**:
+3. **Run archinstall with [preset config](https://chenxing-dev.github.io/dotfiles/config.json)**:
    ```bash
    archinstall --config https://chenxing-dev.github.io/dotfiles/config.json
    ```
+
 ### Dotfiles setup
 
 4. **Clone the repository**:
@@ -82,6 +81,7 @@ dotfiles/
    ```
 
 ### **Backup restoration**:
+
    ```bash
    # View available backups
    ls ~/dotfiles_backup
