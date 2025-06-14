@@ -1,0 +1,60 @@
+configuration {
+    font: "FiraCode Nerd Font 12";
+}
+
+* {
+    background-color:   #ffffff;
+    foreground-color:   #0e1116;
+    border-color:       #66707b;
+    selected-color:rgb(138, 141, 145);
+    accent-color:       #0349b4;
+    urgent-color:       #a0111f;
+}
+
+window {
+    location:           center;
+    width:              20%;
+    padding:            8px;
+    border:             1px;
+    border-radius:      12px;
+    border-color:       @border-color;
+    background-color:   @background-color;
+}
+
+textbox-prompt-colon {
+    expand: 			false;
+    str: 				"> ";
+    text-color: 		@foreground-color;
+}
+
+inputbar {
+    children:           [prompt, textbox-prompt-colon, entry];
+    padding:            4px;
+    background-color:   @background-color;
+}
+
+listview {
+    lines:              10;
+    background-color:   @background-color;
+}
+
+element {
+    padding:            4px;
+    text-color:         @foreground-color;
+    background-color:   @background-color;
+}
+
+element selected {
+    text-color:         @background-color;
+    background-color:   @selected-color;
+}
+
+element-text, element-icon {
+    background-color:   inherit;
+    text-color:         inherit;
+}
+
+element-icon {
+    padding: 						0px 8px 0px;
+    size:                           18px;
+}

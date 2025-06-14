@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Dedicated URL launcher with bookmark support
+
+BOOKMARKS_FILE="$HOME/.config/rofi/bookmarks.txt"
+[ -f "$BOOKMARKS_FILE" ] || exit 1
+
+# Process bookmarks with flexible formatting
+declare -a bookmarks
+while IFS= read -r line; do
+    # Skip empty lines
+    [ -z "$line" ] && continue
+
+    # Extract URL and optional name
+    if [[ "$line" == *"|"* ]]; then
+        # Format: Display Name | URL
+        name=$(echo "$line" | awk -F'|' '{print $1}' | xargs -0)
+        url=$(echo "$line" | awk -F'|' '{print $2}' | xargs)
+        # Only add pipe if both name and URL exist
+        if [[ -n "$name" && -n "$url" ]]; then
+            bookmarks+=("$name | $url")
+        elif [[ -n "$url" ]]; then
+            # Only URL exists - display URL alone
+            bookmarks+=("$url")
+        fi
+    else
+        # Only URL provided - display URL alone
+        url=$(echo "$line" | xargs)
+        bookmarks+=("$url")
+    fi
+
+done <"$BOOKMARKS_FILE"
+
+selection=$(printf '%s\n' "${bookmarks[@]}" | rofi -dmenu -p "Bookmarks")
+
+# Extract URL from original line (not shortened)
+line_match=$(grep -F -m 1 "${selection%%|*}" <(grep -v '^#' "$BOOKMARKS_FILE"))
+if [[ "$line_match" == *"|"* ]]; then
+    url=$(echo "$line_match" | awk -F'|' '{print $2}' | xargs)
+else
+    url="$selection"
+fi
+
+if [ -n "$url" ]; then
+    # Add protocol if missing
+    if [[ ! "$url" =~ ^(http|https|ftp):// ]]; then
+        url="https://$url"
+    fi
+    xdg-open "$url"
+fi

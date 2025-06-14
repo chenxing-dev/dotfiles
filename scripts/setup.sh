@@ -82,6 +82,14 @@ stow_package() {
 
     info "Deploying ${package}..."
     ${STOW_CMD} --restow "${package}" || error "Failed to deploy ${package}"
+
+    # Run package-specific post-stow hook if exists
+    local post_stow_hook="${STOW_DIR}/${package}/post-stow.sh"
+    if [[ -f "$post_stow_hook" ]]; then
+        info "Running post-stow hook for ${package}..."
+        bash "$post_stow_hook"
+        rm -f "$HOME/post-stow.sh"
+    fi
 }
 
 show_help() {

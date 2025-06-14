@@ -90,6 +90,16 @@ dotfiles/
    cp -r ~/dotfiles_backup/qtile_20240611_1420/* ~/
    ```
 
+## Troubleshooting
+
+### Ensure ~/.local/bin is in PATH
+
+For bash users:
+```bash
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+```
+
 ## Contributing
 
 Contributions are welcome! Please follow these steps:

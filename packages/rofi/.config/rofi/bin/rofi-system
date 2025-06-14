@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# System control menu with confirmation
+
+options=(
+    " Shutdown"
+    " Reboot"
+)
+
+selected=$(printf '%s\n' "${options[@]}" | rofi -dmenu -p "System")
+
+confirm() {
+    echo -e "Yes\nNo" | rofi -dmenu -p "Confirm $1?"
+}
+
+case $selected in
+" Shutdown")
+    [[ $(confirm "Shutdown") == "Yes" ]] && systemctl poweroff
+    ;;
+" Reboot")
+    [[ $(confirm "Reboot") == "Yes" ]] && systemctl reboot
+    ;;
+esac

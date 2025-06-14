@@ -40,7 +40,8 @@
     "noto-fonts-emoji",
     "fcitx5-material-color",
     "dunst",
-    "python-iwlib"
+    "python-iwlib",
+    "rofi"
   ],
   "profile_config": {
     "gfx_driver": "All open-source",
