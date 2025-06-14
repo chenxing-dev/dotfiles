@@ -43,7 +43,7 @@ dotfiles/
 
 4. **Clone the repository**:
    ```bash
-   git clone https://github.com/yourusername/dotfiles.git ~/dotfiles
+   git clone https://github.com/chenxing-dev/dotfiles.git ~/dotfiles
    ```
 
 5. **Run the setup script**:

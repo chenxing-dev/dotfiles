@@ -10,9 +10,7 @@ set -euo pipefail
 # Get repository root directory
 HOME_DIR=${HOME}
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-BACKUP_DIR="${HOME_DIR}/dotfiles_backup"
 STOW_DIR="${REPO_ROOT}/packages"
-STOW_CMD="stow --verbose=1 --dir=${STOW_DIR} --target=${HOME_DIR}"
 SCRIPT_DIR="${REPO_ROOT}/scripts"
 declare -a PACKAGES=()
 ALL=false
@@ -110,8 +108,6 @@ while [[ $# -gt 0 ]]; do
         ;;
     --home-dir)
         HOME_DIR="$2"
-        BACKUP_DIR="${HOME_DIR}/dotfiles_backup"
-        STOW_CMD="stow --verbose=1 --dir=${STOW_DIR} --target=${HOME_DIR}"
         shift 2
         ;;
     --help)
@@ -127,6 +123,10 @@ while [[ $# -gt 0 ]]; do
         ;;
     esac
 done
+
+# Configuration
+BACKUP_DIR="${HOME_DIR}/dotfiles_backup"
+STOW_CMD="stow --verbose=1 --adopt --dir=${STOW_DIR} --target=${HOME_DIR}"
 
 # Main execution
 cd "${SCRIPT_DIR}" || error "Failed to access script directory"
