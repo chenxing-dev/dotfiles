@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+# Dedicated URL launcher with bookmark support
+
+# Configuration
+HISTORY_FILE="$HOME/.cache/rofi-code-history"
+MAX_HISTORY=15
+
+# Create history file if missing
+mkdir -p "$(dirname "$HISTORY_FILE")"
+touch "$HISTORY_FILE"
+
+# Show recent repos from history
+show_history() {
+    # Get unique history preserving order
+    tac "$HISTORY_FILE" | awk '!seen[$0]++' | head -n $MAX_HISTORY
+}
+
+# Add to history
+add_history() {
+    # Only add if not already in history
+    if ! grep -qFx "$1" "$HISTORY_FILE"; then
+        echo "$1" >>"$HISTORY_FILE"
+    fi
+
+    # Trim history
+    tail -n $MAX_HISTORY "$HISTORY_FILE" >"${HISTORY_FILE}.tmp"
+    mv "${HISTORY_FILE}.tmp" "$HISTORY_FILE"
+}
+
+# Main function
+main() {
+    # Get history
+    history=$(show_history)
+
+    # Create action options
+    actions=(
+        " New repository..."
+        " Search GitHub..."
+    )
+
+    # Format options based on history
+    if [[ -z "$history" ]]; then
+        # No history - only show actions
+        options=$(printf '%s\n' "${actions[@]}")
+    else
+        # Show history followed by actions
+        options=$(printf '%s\n' "$history" "────────────────────────────" "${actions[@]}")
+    fi
+
+    # Display with Rofi
+    selected=$(printf '%s' "$options" | rofi -dmenu -p " Repositories:" -matching fuzzy)
+
+    if [[ -z "$selected" ]]; then
+        exit 0
+    fi
+
+    case "$selected" in
+    " New repository...")
+        new_repo=$(rofi -dmenu -p " Create repo in:" -l 0 -filter "$HOME/")
+
+        if [[ -n "$new_repo" ]]; then
+            # Expand ~ to home directory
+            full_path="${new_repo/#\~/$HOME}"
+            mkdir -p "$full_path"
+            cd "$full_path" && git init
+            code "$full_path"
+            add_history "${full_path#"$HOME"/}"
+        fi
+        ;;
+
+    " Search GitHub...")
+        query=$(rofi -dmenu -p " Search GitHub:")
+        if [[ -n "$query" ]]; then
+            xdg-open "https://github.com/search?q=$query&type=repositories"
+        fi
+        ;;
+
+    *)
+        # Regular repo selected from history
+        full_path="$HOME/$selected"
+        if [[ -d "$full_path" ]]; then
+            add_history "$selected"
+            code "$full_path"
+        else
+            # Remove invalid entry from history
+            sed -i "\|^$selected$|d" "$HISTORY_FILE"
+            notify-send "Repo Not Found" "Directory not found: $full_path" -t 5000
+        fi
+        ;;
+    esac
+}
+
+# Run main function
+main
