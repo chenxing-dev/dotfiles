@@ -41,7 +41,8 @@
     "fcitx5-material-color",
     "dunst",
     "python-iwlib",
-    "rofi"
+    "rofi",
+    "code"
   ],
   "profile_config": {
     "gfx_driver": "All open-source",
