@@ -42,6 +42,10 @@ def autostart():
 mod = "mod4"
 terminal = "wezterm"
 
+# Screenshot directory setup
+screenshot_dir = os.path.expanduser("~/Pictures/Screenshots")
+os.makedirs(screenshot_dir, exist_ok=True)
+
 keys = [
     # A list of available commands that can be bound to keys can be found
     # at https://docs.qtile.org/en/latest/manual/config/lazy.html
@@ -90,6 +94,16 @@ keys = [
         "~/.local/bin/rofi-nmcli")), desc="Network manager"),
     Key([mod], "r", lazy.spawncmd(), desc="Spawn a command using a prompt widget"),
     Key([mod], "Return", lazy.spawn(terminal), desc="Launch terminal"),
+
+    # Screenshot
+    Key([], "Print", lazy.spawn(
+        f"scrot '{screenshot_dir}/%Y-%m-%d_%H-%M-%S_full.png' "
+        "-e 'notify-send \"Screenshot\" \"Fullscreen captured \n$f\" -i camera-photo'"
+    ), desc="Fullscreen screenshot"),
+    Key(["shift"], "Print", lazy.spawn(
+        f"scrot -s '{screenshot_dir}/%Y-%m-%d_%H-%M-%S_area.png' "
+        "-e 'notify-send \"Screenshot\" \"Selected area captured \n$f\" -i camera-photo'"
+    ), desc="Region selection screenshot"),
 
     # Toggle between different layouts as defined below
     Key([mod], "Tab", lazy.next_layout(), desc="Toggle between layouts"),
