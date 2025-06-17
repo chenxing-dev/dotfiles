@@ -83,6 +83,7 @@ keys = [
         "~/.local/bin/rofi-url")), desc="Url bookmark launcher"),
     Key([mod], "c", lazy.spawn(os.path.expanduser(
         "~/.local/bin/rofi-code")), desc="Open repos in VS Code"),
+    Key([mod], "d", lazy.spawn("rofi -show drun"), desc="Application launcher"),
     Key([mod, "shift"], "e", lazy.spawn(os.path.expanduser(
         "~/.local/bin/rofi-system")), desc="Power menu"),
     Key([mod], "n", lazy.spawn(os.path.expanduser(
@@ -94,12 +95,10 @@ keys = [
     Key([mod], "Tab", lazy.next_layout(), desc="Toggle between layouts"),
     Key([mod], "w", lazy.window.kill(), desc="Kill focused window"),
 
-    Key(
-        [mod],
-        "f",
+    Key([mod], "f",
         lazy.window.toggle_fullscreen(),
         desc="Toggle fullscreen on the focused window",
-    ),
+        ),
     Key([mod], "t", lazy.window.toggle_floating(),
         desc="Toggle floating on the focused window"),
     Key([mod, "control"], "r", lazy.reload_config(), desc="Reload the config"),
