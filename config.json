@@ -42,7 +42,8 @@
     "dunst",
     "python-iwlib",
     "rofi",
-    "code"
+    "code",
+    "scrot"
   ],
   "profile_config": {
     "gfx_driver": "All open-source",
