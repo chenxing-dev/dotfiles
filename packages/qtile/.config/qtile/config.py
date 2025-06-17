@@ -67,7 +67,6 @@ keys = [
         desc="Grow window to the right"),
     Key([mod, "control"], "j", lazy.layout.grow_down(), desc="Grow window down"),
     Key([mod, "control"], "k", lazy.layout.grow_up(), desc="Grow window up"),
-    Key([mod], "n", lazy.layout.normalize(), desc="Reset all window sizes"),
     # Toggle between split and unsplit sides of stack.
     # Split = all windows displayed
     # Unsplit = 1 window displayed, like Max layout, but still with
@@ -78,16 +77,23 @@ keys = [
         lazy.layout.toggle_split(),
         desc="Toggle between split and unsplit sides of stack",
     ),
-    Key([mod], "Return", lazy.spawn(terminal), desc="Launch terminal"),
+
+    # Launchers
     Key([mod], "b", lazy.spawn(os.path.expanduser(
         "~/.local/bin/rofi-url")), desc="Url bookmark launcher"),
     Key([mod], "c", lazy.spawn(os.path.expanduser(
         "~/.local/bin/rofi-code")), desc="Open repos in VS Code"),
+    Key([mod, "shift"], "e", lazy.spawn(os.path.expanduser(
+        "~/.local/bin/rofi-system")), desc="Power menu"),
+    Key([mod], "n", lazy.spawn(os.path.expanduser(
+        "~/.local/bin/rofi-nmcli")), desc="Network manager"),
+    Key([mod], "r", lazy.spawncmd(), desc="Spawn a command using a prompt widget"),
+    Key([mod], "Return", lazy.spawn(terminal), desc="Launch terminal"),
+
     # Toggle between different layouts as defined below
     Key([mod], "Tab", lazy.next_layout(), desc="Toggle between layouts"),
     Key([mod], "w", lazy.window.kill(), desc="Kill focused window"),
-    Key([mod, "shift"], "e", lazy.spawn(os.path.expanduser(
-        "~/.local/bin/rofi-system")), desc="Power menu"),
+
     Key(
         [mod],
         "f",
@@ -98,7 +104,6 @@ keys = [
         desc="Toggle floating on the focused window"),
     Key([mod, "control"], "r", lazy.reload_config(), desc="Reload the config"),
     Key([mod, "control"], "q", lazy.shutdown(), desc="Shutdown Qtile"),
-    Key([mod], "r", lazy.spawncmd(), desc="Spawn a command using a prompt widget"),
 ]
 
 # Add key bindings to switch VTs in Wayland.
