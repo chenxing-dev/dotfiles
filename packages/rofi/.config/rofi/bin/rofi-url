@@ -1,57 +1,147 @@
 #!/usr/bin/env bash
 # Dedicated URL launcher with bookmark support
 
+# Configuration
 BOOKMARKS_FILE="$HOME/.config/rofi/bookmarks.txt"
-[ -f "$BOOKMARKS_FILE" ] || exit 1
+EDITOR="nano" # Change to your preferred editor (vim, nvim, nano, etc.)
+IS_GUI_EDITOR=FALSE
 
-# Create arrays for display and actual URLs
-declare -a display_items
-declare -a actual_urls
+# Ensure bookmarks file exists
+mkdir -p "$(dirname "$BOOKMARKS_FILE")"
+touch "$BOOKMARKS_FILE"
 
-# Process bookmarks with flexible formatting
-while IFS= read -r line; do
-    # Skip empty lines
-    [ -z "$line" ] && continue
+# Process bookmarks with improved formatting
+process_bookmarks() {
+    # Create arrays for display and actual URLs
+    declare -a display_items
+    declare -a actual_urls
 
-    # Extract URL and optional name
-    if [[ "$line" == *"|"* ]]; then
-        # Format: Display Name | URL
-        name=$(echo "$line" | awk -F'|' '{print $1}' | xargs -0)
-        url=$(echo "$line" | awk -F'|' '{print $2}' | xargs)
+    # Process bookmarks with flexible formatting
+    while IFS= read -r line; do
+        # Skip empty lines and comments
+        [[ -z "$line" || "$line" =~ ^# ]] && continue
 
-        # Only add if URL exists
-        if [[ -n "$url" ]]; then
-            display_items+=("$name | $url")
+        # Split into name and URL
+        if [[ "$line" == *"|"* ]]; then
+            # Format: Display Name | URL
+            name=$(echo "$line" | awk -F'|' '{print $1}' | xargs -0)
+            local url
+            url=$(echo "$line" | awk -F'|' '{print $2}' | xargs)
+
+            # Only add if URL exists
+            if [[ -n "$url" ]]; then
+                display_items+=("$name | $url")
+                actual_urls+=("$url")
+            fi
+        else
+            # URL only
+            url=$(echo "$line" | xargs)
+            display_items+=("$url")
             actual_urls+=("$url")
         fi
+    done <"$BOOKMARKS_FILE"
+
+    # Add actions
+    display_items+=("➕ Add New Bookmark")
+    display_items+=("✏️ Edit Bookmarks File")
+
+    # Return arrays (global variables)
+    DISPLAY_ITEMS=("${display_items[@]}")
+    ACTUAL_URLS=("${actual_urls[@]}")
+}
+
+# Main function
+main() {
+    process_bookmarks
+
+    # Display with Rofi
+    selection=$(printf '%s\n' "${DISPLAY_ITEMS[@]}" | rofi -dmenu -p " Bookmarks")
+
+    case "$selection" in
+    "➕ Add New Bookmark")
+        add_bookmark
+        ;;
+    "✏️ Edit Bookmarks File")
+        edit_bookmarks_file
+        ;;
+    *)
+        local url
+        # Find the index of the selected item
+        for i in "${!DISPLAY_ITEMS[@]}"; do
+            if [[ "${DISPLAY_ITEMS[$i]}" == "$selection" ]]; then
+                url="${ACTUAL_URLS[$i]}"
+                open_url "$url"
+                break
+            fi
+        done
+
+        # Opoen Custom URL
+        if [[ -z "$url" ]]; then
+            url=$selection
+            open_url "$url"
+        fi
+        ;;
+    esac
+}
+
+# Open URL with default browser
+open_url() {
+    local url="$1"
+
+    if [ -n "$url" ]; then
+        # Add protocol if missing
+        if [[ ! "$url" =~ ^(http|https|ftp):// ]]; then
+            url="https://$url"
+        fi
+
+        xdg-open "$url"
+    fi
+}
+
+# Add a new bookmark
+add_bookmark() {
+    # Get bookmark name
+    name=$(rofi -dmenu -p "📝 Bookmark Name")
+
+    if [[ -z "$name" ]]; then
+        return
+    fi
+
+    # Get URL
+    local url
+    url=$(rofi -dmenu -p "🌐 URL")
+
+    if [[ -z "$url" ]]; then
+        return
+    fi
+
+    # Add to bookmarks file
+    echo "$name | $url" >>"$BOOKMARKS_FILE"
+    notify-send "Bookmark Added" "$name added to bookmarks" -t 2000
+}
+
+# Edit bookmarks file
+edit_bookmarks_file() {
+    # Use default editor if available, otherwise fallback
+    editor=${EDITOR:-$DEFAULT_EDITOR}
+
+    # Open editor in terminal or GUI based on editor type
+    if [[ $IS_GUI_EDITOR ]]; then
+        # GUI editors
+        "$editor" "$BOOKMARKS_FILE"
+
     else
-        # URL only
-        url=$(echo "$line" | xargs)
-        display_items+=("$url")
-        actual_urls+=("$url")
+        # Terminal-based editors
+        if command -v wezterm >/dev/null; then
+            wezterm -e "$editor" "$BOOKMARKS_FILE"
+        elif command -v alacritty >/dev/null; then
+            alacritty -e "$editor" "$BOOKMARKS_FILE"
+        else
+            # Fallback to running in current terminal
+            "$editor" "$BOOKMARKS_FILE"
+        fi
     fi
-done < <(grep -v '^#' "$BOOKMARKS_FILE")
+}
 
-# Display with Rofi
-selection=$(printf '%s\n' "${display_items[@]}" | rofi -dmenu -p "Bookmarks")
-
-# Find the index of the selected item
-for i in "${!display_items[@]}"; do
-    if [[ "${display_items[$i]}" == "$selection" ]]; then
-        actual_url="${actual_urls[$i]}"
-        break
-    fi
-done
-
-# custom URL
-if [[ -z "$actual_url" ]]; then
-    actual_url=$selection
-fi
-
-if [ -n "$actual_url" ]; then
-    # Add protocol if missing
-    if [[ ! "$actual_url" =~ ^(http|https|ftp):// ]]; then
-        actual_url="https://$actual_url"
-    fi
-    xdg-open "$actual_url"
-fi
+# Run main function
+main
