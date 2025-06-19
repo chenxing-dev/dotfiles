@@ -3,8 +3,7 @@
 
 # Configuration
 BOOKMARKS_FILE="$HOME/.config/rofi/bookmarks.txt"
-EDITOR="nano" # Change to your preferred editor (vim, nvim, nano, etc.)
-IS_GUI_EDITOR=FALSE
+EDITOR="code"
 
 # Ensure bookmarks file exists
 mkdir -p "$(dirname "$BOOKMARKS_FILE")"
@@ -122,25 +121,7 @@ add_bookmark() {
 
 # Edit bookmarks file
 edit_bookmarks_file() {
-    # Use default editor if available, otherwise fallback
-    editor=${EDITOR:-$DEFAULT_EDITOR}
-
-    # Open editor in terminal or GUI based on editor type
-    if [[ $IS_GUI_EDITOR ]]; then
-        # GUI editors
-        "$editor" "$BOOKMARKS_FILE"
-
-    else
-        # Terminal-based editors
-        if command -v wezterm >/dev/null; then
-            wezterm -e "$editor" "$BOOKMARKS_FILE"
-        elif command -v alacritty >/dev/null; then
-            alacritty -e "$editor" "$BOOKMARKS_FILE"
-        else
-            # Fallback to running in current terminal
-            "$editor" "$BOOKMARKS_FILE"
-        fi
-    fi
+    "$EDITOR" "$BOOKMARKS_FILE"
 }
 
 # Run main function
