@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Code Repo Launcher with GitHub Cloning
-# Features: Open repos, clone from GitHub, history tracking
+# Code Repo Launcher with GitHub and Gitee Cloning
+# Features: Open repos, clone from GitHub/Gitee, history tracking
 
 # Configuration
 CLONE_DIR="$HOME" # Default directory for cloned repositories
@@ -29,6 +29,32 @@ add_history() {
     mv "${HISTORY_FILE}.tmp" "$HISTORY_FILE"
 }
 
+# Clone repository with proper error handling
+clone_repo() {
+    local repo_url="$1"
+    local service_name="$2"
+
+    # Get target directory
+    target_dir="$CLONE_DIR/$repo_name"
+
+    # Clone repository
+    clone_result=$(git clone "$repo_url" "$target_dir" 2>&1)
+    exit_code=$?
+
+    if [[ $exit_code -eq 0 ]]; then
+        notify-send "$service_name Repository Cloned" "Successfully cloned to $target_dir" -t 3000
+        add_history "$repo_name"
+        code "$target_dir"
+    else
+        # Extract meaningful error message
+        error_msg=$(echo "$clone_result" | grep -iE 'error|fatal|failed' | head -1)
+
+        # Default error handling
+        error_msg=${error_msg:-"Clone failed with exit code $exit_code"}
+        notify-send "Clone Failed" "$error_msg" -t 5000 -u critical
+    fi
+}
+
 # Clone GitHub repository
 clone_github_repo() {
     # Get repository URL/identifier
@@ -47,25 +73,30 @@ clone_github_repo() {
         repo_name=$(basename "$repo_input" .git)
     fi
 
-    # Get target directory
-    target_dir="$CLONE_DIR/$repo_name"
+    # Clone repository
+    clone_repo "$repo_url" "$target_dir" "GitHub"
+}
 
-    # Clone repository with error handling
-    clone_result=$(git clone "$repo_url" "$target_dir" 2>&1)
-    exit_code=$?
+# Clone Gitee repository
+clone_gitee_repo() {
+    # Get repository URL/identifier
+    repo_input=$(rofi -dmenu -p " Repo (user/repo)")
 
-    if [[ $exit_code -eq 0 ]]; then
-        notify-send "Repository Cloned" "Successfully cloned to $target_dir" -t 3000
-        add_history "$repo_name"
-        code "$target_dir"
-    else
-        # Extract meaningful error message
-        error_msg=$(echo "$clone_result" | grep -iE 'error|fatal|failed' | head -1)
-
-        # Default error handling
-        error_msg=${error_msg:-"Clone failed with exit code $exit_code"}
-        notify-send "Clone Failed" "$error_msg" -t 5000 -u critical
+    if [[ -z "$repo_input" ]]; then
+        return
     fi
+
+    # Convert user/repo format to URL
+    if [[ "$repo_input" == */* && ! "$repo_input" == *://* ]]; then
+        repo_url="https://gitee.com/$repo_input.git"
+        repo_name=$(basename "$repo_input")
+    else
+        repo_url="$repo_input"
+        repo_name=$(basename "$repo_input" .git)
+    fi
+
+    # Clone repository
+    clone_repo "$repo_url" "$target_dir" "Gitee"
 }
 
 # Main function
@@ -77,6 +108,7 @@ main() {
     actions=(
         " New repository..."
         " Clone GitHub repo..."
+        " Clone Gitee repo..."
         " Search GitHub..."
     )
 
@@ -100,7 +132,9 @@ main() {
     " Clone GitHub repo...")
         clone_github_repo
         ;;
-
+    " Clone Gitee repo...") # Handle Gitee cloning
+        clone_gitee_repo
+        ;;
     " New repository...")
         new_repo=$(rofi -dmenu -p " Create repo in:" -l 0 -filter "$HOME/")
 
