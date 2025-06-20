@@ -195,7 +195,7 @@ extension_defaults = widget_defaults.copy()
 
 screens = [
     Screen(
-        wallpaper="~/Pictures/grid-pattern-background.png",
+        wallpaper=os.path.expanduser("~/.config/qtile/wallpaper.png"),
         wallpaper_mode='stretch',
         bottom=bar.Bar(
             [

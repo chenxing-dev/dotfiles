@@ -50,6 +50,7 @@ dotfiles/
    cd ~/dotfiles
    ./scripts/setup.sh --all
    ```
+   Reboot.
 
 ## Usage
 
@@ -57,7 +58,7 @@ dotfiles/
 
 ```bash
 # Deploy all configurations
-./scripts/setup.sh --all --home-dir /home/user
+./scripts/setup.sh --all
 
 # Deploy specific packages
 ./scripts/setup.sh qtile wezterm yazi
