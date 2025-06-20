@@ -45,7 +45,8 @@
     "code",
     "scrot",
     "man-pages",
-    "man-db"
+    "man-db",
+    "npm"
   ],
   "profile_config": {
     "gfx_driver": "All open-source",
