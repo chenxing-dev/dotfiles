@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
-# Dedicated URL launcher with bookmark support
+# Code Repo Launcher with GitHub Cloning
+# Features: Open repos, clone from GitHub, history tracking
 
 # Configuration
+CLONE_DIR="$HOME" # Default directory for cloned repositories
 HISTORY_FILE="$HOME/.cache/rofi-code-history"
 MAX_HISTORY=15
 
-# Create history file if missing
-mkdir -p "$(dirname "$HISTORY_FILE")"
+# Ensure directories exist
+mkdir -p "$CLONE_DIR" "$(dirname "$HISTORY_FILE")"
 touch "$HISTORY_FILE"
 
 # Show recent repos from history
@@ -27,6 +29,38 @@ add_history() {
     mv "${HISTORY_FILE}.tmp" "$HISTORY_FILE"
 }
 
+# Clone GitHub repository
+clone_github_repo() {
+    # Get repository URL/identifier
+    repo_input=$(rofi -dmenu -p " Repo (user/repo)")
+
+    if [[ -z "$repo_input" ]]; then
+        return
+    fi
+
+    # Convert user/repo format to URL
+    if [[ "$repo_input" == */* && ! "$repo_input" == *://* ]]; then
+        repo_url="https://github.com/$repo_input.git"
+        repo_name=$(basename "$repo_input")
+    else
+        repo_url="$repo_input"
+        repo_name=$(basename "$repo_input" .git)
+    fi
+
+    # Get target directory
+    target_dir="$CLONE_DIR/$repo_name"
+
+    # Clone repository
+    if git clone "$repo_url" "$target_dir" 2>&1 | tee /tmp/rofi-code-clone.log; then
+        notify-send "Repository Cloned" "Successfully cloned to $target_dir" -t 3000
+        add_history "$repo_name"
+        code "$target_dir"
+    else
+        error_msg=$(grep -i 'error\|fatal' /tmp/rofi-code-clone.log | head -1)
+        notify-send "Clone Failed" "${error_msg:-"Unknown error"}" -t 5000 -u critical
+    fi
+}
+
 # Main function
 main() {
     # Get history
@@ -35,6 +69,7 @@ main() {
     # Create action options
     actions=(
         " New repository..."
+        " Clone GitHub repo..."
         " Search GitHub..."
     )
 
@@ -55,6 +90,10 @@ main() {
     fi
 
     case "$selected" in
+    " Clone GitHub repo...")
+        clone_github_repo
+        ;;
+
     " New repository...")
         new_repo=$(rofi -dmenu -p " Create repo in:" -l 0 -filter "$HOME/")
 
