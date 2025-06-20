@@ -50,14 +50,21 @@ clone_github_repo() {
     # Get target directory
     target_dir="$CLONE_DIR/$repo_name"
 
-    # Clone repository
-    if git clone "$repo_url" "$target_dir" 2>&1 | tee /tmp/rofi-code-clone.log; then
+    # Clone repository with error handling
+    clone_result=$(git clone "$repo_url" "$target_dir" 2>&1)
+    exit_code=$?
+
+    if [[ $exit_code -eq 0 ]]; then
         notify-send "Repository Cloned" "Successfully cloned to $target_dir" -t 3000
         add_history "$repo_name"
         code "$target_dir"
     else
-        error_msg=$(grep -i 'error\|fatal' /tmp/rofi-code-clone.log | head -1)
-        notify-send "Clone Failed" "${error_msg:-"Unknown error"}" -t 5000 -u critical
+        # Extract meaningful error message
+        error_msg=$(echo "$clone_result" | grep -iE 'error|fatal|failed' | head -1)
+
+        # Default error handling
+        error_msg=${error_msg:-"Clone failed with exit code $exit_code"}
+        notify-send "Clone Failed" "$error_msg" -t 5000 -u critical
     fi
 }
 
