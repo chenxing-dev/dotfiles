@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+# rofi-iwctl: WiFi Management with iwd and Rofi
+# Requires: iwd, rofi, notify-send
+
+# Configuration
+IWCTL_CMD="iwctl"
+INTERFACE="wlan0"  # Default wireless interface
+
+# Main menu
+main_menu() {
+    # Get WiFi status
+    wifi_status=$($IWCTL_CMD device $INTERFACE show | awk '/Powered/ {print $4}')
+    [[ "$wifi_status" != "on" ]] && wifi_status="off"
+    
+    # Get connection status
+    connected_ssid=$($IWCTL_CMD station $INTERFACE show | awk '/Connected network/ {print $3}')
+    
+    options=()
+    
+    # Add connected status
+    if [[ -n "$connected_ssid" ]]; then
+        options+=(" Connected to: $connected_ssid")
+        options+=(" Disconnect")
+    else
+        options+=(" Status: $([ "$wifi_status" = "on" ] && echo "On" || echo "Off")") 
+    fi
+    
+    options+=(" Available Networks")
+    options+=(" Rescan Networks")
+    
+    printf '%s\n' "${options[@]}"
+}
+
+# Scan networks
+scan_networks() {
+    $IWCTL_CMD station $INTERFACE scan
+    sleep 2  # Wait for scan to complete
+    notify-send "Network Scan" "Scanning for available networks..." -i network-wireless
+}
+
+# List available networks
+list_networks() {
+    scan_networks
+    $IWCTL_CMD station $INTERFACE get-networks | \
+        awk 'NR>2 {print $1}' | \
+        rofi -dmenu -p " Networks"
+}
+
+# List known networks
+known_networks() {
+    $IWCTL_CMD known-networks list | \
+        rofi -dmenu -p " Known Networks"
+}
+
+# Connect to network
+connect_to_network() {
+    ssid="$1"
+    password=$(rofi -dmenu -password -p " Password for $ssid")
+    
+    if [ -n "$password" ]; then
+        # Connect using iwctl
+        if $IWCTL_CMD station $INTERFACE connect "$ssid" --passphrase "$password"; then
+            notify-send "Connected" "Joined $ssid" -i network-wireless
+        else
+            notify-send "Connection Failed" "Could not connect to $ssid" -i network-wireless-error
+        fi
+    fi
+}
+
+# Connect to known network
+connect_known() {
+    ssid="$1"
+    if $IWCTL_CMD station $INTERFACE connect "$ssid"; then
+        notify-send "Connected" "Joined $ssid" -i network-wireless
+    else
+        notify-send "Connection Failed" "Could not connect to $ssid" -i network-wireless-error
+    fi
+}
+
+# Execute based on selection
+selected=$(main_menu | rofi -dmenu -p " WiFi")
+
+case "$selected" in
+    " Rescan Networks")
+        scan_networks
+        ;;
+    " Available Networks")
+        ssid=$(list_networks)
+        [ -n "$ssid" ] && connect_to_network "$ssid"
+        ;;
+    " Known Networks")
+        ssid=$(known_networks)
+        [ -n "$ssid" ] && connect_known "$ssid"
+        ;;
+    " Disconnect")
+        $IWCTL_CMD station $INTERFACE disconnect
+        notify-send "Disconnected" "WiFi connection terminated" -i network-wireless-disconnected
+        ;;
+esac
