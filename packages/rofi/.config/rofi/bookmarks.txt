@@ -5,3 +5,4 @@ tailwindcss | https://tailwindcss.com/docs/installation/using-vite
 GitHub | https://github.com
 Arch Wiki | https://wiki.archlinux.org
 Arch Linux Package Search | https://archlinux.org/packages/
+alamy | https://www.alamy.com/
