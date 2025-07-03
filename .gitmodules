@@ -1,0 +1,3 @@
+[submodule "packages/qutebrowser/.config/qutebrowser/startpage"]
+	path = packages/qutebrowser/.config/qutebrowser/startpage
+	url = https://github.com/chenxing-dev/startpage-alpine.git
