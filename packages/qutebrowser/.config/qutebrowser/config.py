@@ -15,7 +15,7 @@ c.fonts.default_family = ["FiraCode Nerd Font Mono", "Noto Color Emoji"]
 c.fonts.default_size = "12pt"
 
 startpage_path = os.path.expanduser(
-    "~/.config/qutebrowser/startpage/index.html")
+    "~/dotfiles/startpage/index.html")
 c.url.start_pages = [startpage_path]
 c.url.default_page = startpage_path
 c.url.searchengines = {
