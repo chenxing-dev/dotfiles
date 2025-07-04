@@ -1,13 +1,15 @@
 @charset "UTF-8";
-@-moz-document url(chrome://browser/content/browser.xhtml)
-{
-  /* Please write your custom CSS under this line*/
+
+@-moz-document url(chrome://browser/content/browser.xhtml){
+/* Please write your custom CSS under this line*/
 }
+
 .browser-toolbar {
   min-width: 0;
   min-height: 0;
   background-color: #eceaf2;
 }
+
 .titlebar-button {
   background-color: white !important;
   color: black !important;
@@ -133,6 +135,7 @@ tab:first-child {
 #urlbar-container {
   height: 100% !important;
 }
+
 #urlbar-container #urlbar {
   background-color: white !important;
   border: 1px solid black !important;
@@ -186,33 +189,50 @@ body {
 #firefox-view-button,
 #home-button,
 #save-to-pocket-button,
-#import-button {
+#import-button,
+#sidebar-button,
+.toolbaritem-combined-buttons {
   display: none;
 }
+
+#back-button {
+  padding-inline-start: calc(var(--toolbar-start-end-padding) + 2px) !important;
+}
+
 #tabbrowser-tabs {
   border-inline-start: none !important;
 }
+
+#tabbrowser-arrowscrollbox-periphery {
+  padding-inline-end: var(--toolbar-start-end-padding);
+}
+
 #nav-bar toolbarspring {
   flex: 1 !important;
 }
+
 #urlbar:focus {
   outline: none;
 }
+
 toolbar .toolbarbutton-1 {
   &:not([disabled]) {
-    &:hover > :is(.toolbarbutton-icon, .toolbarbutton-text, .toolbarbutton-badge-stack) {
+    &:hover> :is(.toolbarbutton-icon, .toolbarbutton-text, .toolbarbutton-badge-stack) {
       background-color: transparent !important;
+
       image {
         background-color: var(--toolbarbutton-hover-background) !important;
       }
     }
   }
 }
+
 toolbarbutton.bookmark-item:not(.subviewbutton) {
   &:not([disabled], [open]):hover {
     background-color: var(--toolbarbutton-hover-background) !important;
   }
 }
+
 * {
   scrollbar-width: thin;
 }
