@@ -40,9 +40,9 @@ dotfiles/
 
 ### Dotfiles setup
 
-4. **Clone the repository**:
+4. **Clone the repository (including submodules)**:
    ```bash
-   git clone https://github.com/chenxing-dev/dotfiles.git ~/dotfiles
+   git clone --recurse-submodules https://github.com/chenxing-dev/dotfiles.git ~/dotfiles
    ```
 
 5. **Run the setup script**:
@@ -99,6 +99,13 @@ For bash users:
 ```bash
 echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
 source ~/.bashrc
+```
+
+### Updating Submodules
+
+To update submodules to their latest commits:
+```bash
+git submodule update --remote --recursive
 ```
 
 ## Contributing
