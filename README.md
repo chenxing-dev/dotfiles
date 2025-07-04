@@ -111,6 +111,9 @@ Contributions are welcome! Please follow these steps:
 4. Push to the branch
 5. Open a pull request
 
+## Credits
+- Firefox Theme: [Monochrome Neubrutalism by Kaskapa](https://github.com/Kaskapa/Monochrome-Neubrutalism-Firefox-Theme)
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

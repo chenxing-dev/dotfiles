@@ -5,9 +5,7 @@
   },
   "bootloader": "Grub",
   "hostname": "archlinux",
-  "kernels": [
-    "linux"
-  ],
+  "kernels": ["linux"],
   "locale_config": {
     "kb_layout": "us",
     "sys_enc": "UTF-8",
@@ -15,40 +13,14 @@
   },
   "mirror_config": {
     "mirror_regions": {
-      "China": [
-        "http://mirrors.163.com/archlinux/$repo/os/$arch",
-        "http://mirrors.aliyun.com/archlinux/$repo/os/$arch",
-        "http://mirrors.ustc.edu.cn/archlinux/$repo/os/$arch"
-      ]
+      "China": ["http://mirrors.163.com/archlinux/$repo/os/$arch", "http://mirrors.aliyun.com/archlinux/$repo/os/$arch", "http://mirrors.ustc.edu.cn/archlinux/$repo/os/$arch"]
     },
-    "optional_repositories": [
-      "multilib"
-    ]
+    "optional_repositories": ["multilib"]
   },
   "network_config": {
     "type": "iso"
   },
-  "packages": [
-    "git",
-    "stow",
-    "wezterm",
-    "yazi",
-    "picom",
-    "fcitx5-im",
-    "fcitx5-chinese-addons",
-    "noto-fonts-cjk",
-    "noto-fonts-emoji",
-    "ttf-firacode-nerd",
-    "fcitx5-material-color",
-    "dunst",
-    "python-iwlib",
-    "rofi",
-    "code",
-    "scrot",
-    "man-pages",
-    "man-db",
-    "npm"
-  ],
+  "packages": ["git", "stow", "wezterm", "yazi", "picom", "fcitx5-im", "fcitx5-chinese-addons", "noto-fonts-cjk", "noto-fonts-emoji", "ttf-firacode-nerd", "fcitx5-material-color", "dunst", "python-iwlib", "rofi", "code", "scrot", "man-pages", "man-db", "npm", "firefox"],
   "profile_config": {
     "gfx_driver": "All open-source",
     "greeter": "ly",
@@ -56,9 +28,7 @@
       "custom_settings": {
         "Qtile": {}
       },
-      "details": [
-        "Qtile"
-      ],
+      "details": ["Qtile"],
       "main": "Desktop"
     }
   },
