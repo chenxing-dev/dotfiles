@@ -1,4 +1,10 @@
 {
-    "workbench.colorTheme": "Default High Contrast Light",
-    "editor.fontFamily": "'FiraCode Nerd Font Mono', 'monospace'"
+    "workbench.colorTheme": "GitHub Light High Contrast",
+    "editor.fontFamily": "'FiraCode Nerd Font', 'monospace', monospace",
+    "workbench.iconTheme": "material-icon-theme",
+    "editor.wordWrap": "wordWrapColumn",
+    "editor.wordWrapColumn": 110,
+    "[vue]": {
+        "editor.defaultFormatter": "Vue.volar"
+    }
 }
