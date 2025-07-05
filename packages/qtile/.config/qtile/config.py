@@ -47,19 +47,19 @@ def get_network_manager():
             ["systemctl", "is-active", "NetworkManager"],
             capture_output=True, text=True
         ).stdout.strip()
-        
+
         # Check if iwd is running
         iwd_status = subprocess.run(
             ["systemctl", "is-active", "iwd"],
             capture_output=True, text=True
         ).stdout.strip()
-        
+
         # Prioritize NetworkManager if both are active
         if nm_status == "active":
             return os.path.expanduser("~/.local/bin/rofi-nmcli")
         elif iwd_status == "active":
             return os.path.expanduser("~/.local/bin/rofi-iwctl")
-        
+
         # Check for installed commands as fallback
         if subprocess.run(["which", "nmcli"], stdout=subprocess.DEVNULL).returncode == 0:
             return os.path.expanduser("~/.local/bin/rofi-nmcli")
@@ -67,10 +67,10 @@ def get_network_manager():
             return os.path.expanduser("~/.local/bin/rofi-iwctl")
     except Exception:
         pass
-    
+
     # Default fallback
     return os.path.expanduser("~/.local/bin/rofi-nmcli")
-    
+
 
 mod = "mod4"
 terminal = "wezterm"
@@ -121,9 +121,12 @@ keys = [
     Key([mod], "c", lazy.spawn(os.path.expanduser(
         "~/.local/bin/rofi-code")), desc="Open repos in VS Code"),
     Key([mod], "d", lazy.spawn("rofi -show drun"), desc="Application launcher"),
+    Key([mod,], "e", lazy.spawn("wezterm start -- yazi"),
+        desc="Launch Yazi file manager"),
     Key([mod, "shift"], "e", lazy.spawn(os.path.expanduser(
         "~/.local/bin/rofi-system")), desc="Power menu"),
-    Key([mod], "n", lazy.spawn(get_network_manager()), desc="Launch network manager"),
+    Key([mod], "n", lazy.spawn(get_network_manager()),
+        desc="Launch network manager"),
     Key([mod], "r", lazy.spawncmd(), desc="Spawn a command using a prompt widget"),
     Key([mod], "Return", lazy.spawn(terminal), desc="Launch terminal"),
 
