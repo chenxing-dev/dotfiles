@@ -20,7 +20,7 @@
   "network_config": {
     "type": "iso"
   },
-  "packages": ["git", "stow", "wezterm", "yazi", "picom", "fcitx5-im", "fcitx5-chinese-addons", "noto-fonts-cjk", "noto-fonts-emoji", "ttf-firacode-nerd", "fcitx5-material-color", "dunst", "python-iwlib", "rofi", "code", "scrot", "man-pages", "man-db", "npm", "firefox"],
+  "packages": ["git", "stow", "wezterm", "yazi", "picom", "fcitx5-im", "fcitx5-chinese-addons", "noto-fonts-cjk", "noto-fonts-emoji", "ttf-firacode-nerd", "fcitx5-material-color", "dunst", "python-iwlib", "rofi", "code", "scrot", "man-pages", "man-db", "npm", "firefox", "refind"],
   "profile_config": {
     "gfx_driver": "All open-source",
     "greeter": "ly",
