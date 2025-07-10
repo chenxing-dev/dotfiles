@@ -42,14 +42,8 @@ scan_networks() {
 list_networks() {
     scan_networks
     $IWCTL_CMD station $INTERFACE get-networks | \
-        awk 'NR>2 {print $1}' | \
+        awk 'NR>5 {print $1}' | \
         rofi -dmenu -p " Networks"
-}
-
-# List known networks
-known_networks() {
-    $IWCTL_CMD known-networks list | \
-        rofi -dmenu -p " Known Networks"
 }
 
 # Connect to network
@@ -87,10 +81,6 @@ case "$selected" in
     " Available Networks")
         ssid=$(list_networks)
         [ -n "$ssid" ] && connect_to_network "$ssid"
-        ;;
-    " Known Networks")
-        ssid=$(known_networks)
-        [ -n "$ssid" ] && connect_known "$ssid"
         ;;
     " Disconnect")
         $IWCTL_CMD station $INTERFACE disconnect
