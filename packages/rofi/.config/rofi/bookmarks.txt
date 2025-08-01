@@ -1,7 +1,8 @@
+New tab | https://chenxing.dev
 DeepSeek | https://chat.deepseek.com
 Searx | https://searx.foobar.vip/
 tailwindcss | https://tailwindcss.com/docs/installation/using-vite
-陈刑's Blog | https://chenxing-dev.github.io/blog
+陈刑's Blog | https://blog.chenxing.dev
 GitHub | https://github.com
 Arch Wiki | https://wiki.archlinux.org
 Arch Linux Package Search | https://archlinux.org/packages/

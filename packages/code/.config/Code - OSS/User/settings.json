@@ -1,10 +1,22 @@
 {
-    "workbench.colorTheme": "GitHub Light High Contrast",
+    "workbench.colorTheme": "Default High Contrast Light",
     "editor.fontFamily": "'FiraCode Nerd Font', 'monospace', monospace",
     "workbench.iconTheme": "material-icon-theme",
     "editor.wordWrap": "wordWrapColumn",
     "editor.wordWrapColumn": 110,
     "[vue]": {
         "editor.defaultFormatter": "Vue.volar"
-    }
+    },
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
+    "files.associations": {
+        "*.cjson": "jsonc",
+        "*.wxss": "css",
+        "*.wxs": "javascript"
+    },
+    "emmet.includeLanguages": {
+        "wxml": "html"
+    },
+    "diffEditor.ignoreTrimWhitespace": false
 }
