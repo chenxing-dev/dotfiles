@@ -1,9 +1,9 @@
 New tab | https://chenxing.dev
 DeepSeek | https://chat.deepseek.com
-Searx | https://searx.foobar.vip/
 tailwindcss | https://tailwindcss.com/docs/installation/using-vite
 陈刑's Blog | https://blog.chenxing.dev
 GitHub | https://github.com
 Arch Wiki | https://wiki.archlinux.org
 Arch Linux Package Search | https://archlinux.org/packages/
 alamy | https://www.alamy.com/
+Wikipedia | https://zh.wikipedia.org/wiki/Wikipedia:%E9%A6%96%E9%A1%B5
