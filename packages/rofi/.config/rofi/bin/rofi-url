@@ -47,7 +47,7 @@ process_bookmarks() {
         # Only add if URL exists
         if [[ -n "$url" ]]; then
             if [[ -n "$name" ]]; then
-                display_items+=("$name | $url")
+                display_items+=("$name")
             else
                 display_items+=("$url")
             fi
@@ -69,7 +69,7 @@ main() {
     process_bookmarks
     
     # Display with Rofi
-    selection=$(printf '%s\n' "${DISPLAY_ITEMS[@]}" | rofi -dmenu -p " Bookmarks")
+    selection=$(printf '%s\n' "${DISPLAY_ITEMS[@]}" | rofi -dmenu -p " Bookmarks" -i -matching prefix)
     
     case "$selection" in
         "➕ Add New Bookmark")
