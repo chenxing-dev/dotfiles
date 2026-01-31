@@ -4,6 +4,7 @@
 # Configuration
 BOOKMARKS_FILE="$HOME/.config/rofi/bookmarks.json"
 EDITOR="code"
+STARTPAGE_URL="chenxing.dev"
 
 validate_bookmarks() {
 	mkdir -p "$(dirname "$BOOKMARKS_FILE")"
@@ -47,6 +48,10 @@ process_bookmarks() {
 		return
 	fi
 
+	# Add New Tab option at the top
+	display_items+=("New Tab")
+	actual_urls+=("$STARTPAGE_URL")
+
 	# Read and parse bookmarks
 	local sep=$'\x1f'
 
@@ -63,7 +68,9 @@ process_bookmarks() {
 
 	# Add actions
 	display_items+=("➕ Add New Bookmark")
+	actual_urls+=("")
 	display_items+=("✏️ Edit Bookmarks File")
+	actual_urls+=("")
 
 	# Return arrays (global variables)
 	DISPLAY_ITEMS=("${display_items[@]}")
