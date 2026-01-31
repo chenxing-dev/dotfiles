@@ -22,78 +22,78 @@ YELLOW='\033[1;33m'
 NC='\033[0m'
 
 error() {
-    echo -e "${RED}[ERROR]${NC} $1" >&2
-    exit 1
+	echo -e "${RED}[ERROR]${NC} $1" >&2
+	exit 1
 }
 
 warn() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
+	echo -e "${YELLOW}[WARNING]${NC} $1"
 }
 
 info() {
-    echo -e "${GREEN}[INFO]${NC} $1"
+	echo -e "${GREEN}[INFO]${NC} $1"
 }
 
 install_stow() {
-    if ! command -v stow &>/dev/null; then
-        info "Installing GNU Stow..."
-        sudo pacman -Sy --noconfirm stow || error "Failed to install GNU Stow"
-    fi
+	if ! command -v stow &>/dev/null; then
+		info "Installing GNU Stow..."
+		sudo pacman -Sy --noconfirm stow || error "Failed to install GNU Stow"
+	fi
 }
 
 backup_files() {
-    local package="$1"
-    info "Checking for existing ${package} files to backup..."
+	local package="$1"
+	info "Checking for existing ${package} files to backup..."
 
-    local backup_path
-    backup_path="${BACKUP_DIR}/${package}_$(date +%Y%m%d_%H%M%S)"
-    local backup_created=false
-    mkdir -p "${backup_path}" || error "Failed to create backup directory"
+	local backup_path
+	backup_path="${BACKUP_DIR}/${package}_$(date +%Y%m%d_%H%M%S)"
+	local backup_created=false
+	mkdir -p "${backup_path}" || error "Failed to create backup directory"
 
-    # Find and backup existing files
-    while IFS= read -r -d $'\0' file; do
-        local target_file="${HOME_DIR}/${file}"
-        if [[ -e "${target_file}" ]]; then
-            local backup_file="${backup_path}/${file}"
-            mkdir -p "$(dirname "${backup_file}")"
-            cp -a -- "${target_file}" "${backup_file}" || warn "Failed to backup ${target_file}"
-            backup_created=true
-        fi
-    done < <(cd "${STOW_DIR}/${package}" && find . -type f -print0)
+	# Find and backup existing files
+	while IFS= read -r -d $'\0' file; do
+		local target_file="${HOME_DIR}/${file}"
+		if [[ -e "${target_file}" ]]; then
+			local backup_file="${backup_path}/${file}"
+			mkdir -p "$(dirname "${backup_file}")"
+			cp -a -- "${target_file}" "${backup_file}" || warn "Failed to backup ${target_file}"
+			backup_created=true
+		fi
+	done < <(cd "${STOW_DIR}/${package}" && find . \( -type f -o -type l \) -print0)
 
-    # Remove backup directory if no files were backed up
-    if ! $backup_created; then
-        rmdir "${backup_path}" 2>/dev/null
-        info "No existing ${package} files found - no backup created"
-    else
-        info "Backup of ${package} completed to ${backup_path}"
-    fi
+	# Remove backup directory if no files were backed up
+	if ! $backup_created; then
+		rmdir "${backup_path}" 2>/dev/null
+		info "No existing ${package} files found - no backup created"
+	else
+		info "Backup of ${package} completed to ${backup_path}"
+	fi
 }
 
 stow_package() {
-    local package="$1"
+	local package="$1"
 
-    if [[ ! -d "${STOW_DIR}/${package}" ]]; then
-        warn "Package ${package} not found. Skipping."
-        return
-    fi
+	if [[ ! -d "${STOW_DIR}/${package}" ]]; then
+		warn "Package ${package} not found. Skipping."
+		return
+	fi
 
-    backup_files "${package}"
+	backup_files "${package}"
 
-    info "Deploying ${package}..."
-    ${STOW_CMD} --restow "${package}" || error "Failed to deploy ${package}"
+	info "Deploying ${package}..."
+	${STOW_CMD} --restow "${package}" || error "Failed to deploy ${package}"
 
-    # Run package-specific post-stow hook if exists
-    local post_stow_hook="${STOW_DIR}/${package}/post-stow.sh"
-    if [[ -f "$post_stow_hook" ]]; then
-        info "Running post-stow hook for ${package}..."
-        bash "$post_stow_hook"
-        rm -f "$HOME/post-stow.sh"
-    fi
+	# Run package-specific post-stow hook if exists
+	local post_stow_hook="${STOW_DIR}/${package}/post-stow.sh"
+	if [[ -f "$post_stow_hook" ]]; then
+		info "Running post-stow hook for ${package}..."
+		bash "$post_stow_hook"
+		rm -f "$HOME/post-stow.sh"
+	fi
 }
 
 show_help() {
-    cat <<EOF
+	cat <<EOF
 Dotfiles Setup Script
 Usage: $0 [OPTIONS] [PACKAGES...]
 
@@ -109,27 +109,27 @@ EOF
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
-    case "$1" in
-    --all)
-        ALL=true
-        shift
-        ;;
-    --home-dir)
-        HOME_DIR="$2"
-        shift 2
-        ;;
-    --help)
-        show_help
-        exit 0
-        ;;
-    -*)
-        error "Unknown option: $1"
-        ;;
-    *)
-        PACKAGES+=("$1")
-        shift
-        ;;
-    esac
+	case "$1" in
+	--all)
+		ALL=true
+		shift
+		;;
+	--home-dir)
+		HOME_DIR="$2"
+		shift 2
+		;;
+	--help)
+		show_help
+		exit 0
+		;;
+	-*)
+		error "Unknown option: $1"
+		;;
+	*)
+		PACKAGES+=("$1")
+		shift
+		;;
+	esac
 done
 
 # Configuration
@@ -143,22 +143,22 @@ install_stow
 mkdir -p "${BACKUP_DIR}"
 
 if $ALL; then
-    mapfile -t PACKAGES < <(
-        find "${STOW_DIR}" \
-            -mindepth 1 \
-            -maxdepth 1 \
-            -type d \
-            -printf '%f\n'
-    )
+	mapfile -t PACKAGES < <(
+		find "${STOW_DIR}" \
+			-mindepth 1 \
+			-maxdepth 1 \
+			-type d \
+			-printf '%f\n'
+	)
 fi
 
 if [[ ${#PACKAGES[@]} -eq 0 ]]; then
-    show_help
-    error "No packages specified. Use --all or list packages."
+	show_help
+	error "No packages specified. Use --all or list packages."
 fi
 
 for package in "${PACKAGES[@]}"; do
-    stow_package "${package}"
+	stow_package "${package}"
 done
 
 info "Dotfiles setup completed successfully!"

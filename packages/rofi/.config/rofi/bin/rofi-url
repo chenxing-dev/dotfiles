@@ -2,139 +2,154 @@
 # Dedicated URL launcher with bookmark support
 
 # Configuration
-BOOKMARKS_FILE="$HOME/.config/rofi/bookmarks.txt"
+BOOKMARKS_FILE="$HOME/.config/rofi/bookmarks.json"
 EDITOR="code"
 
-# Ensure bookmarks file exists
-mkdir -p "$(dirname "$BOOKMARKS_FILE")"
-touch "$BOOKMARKS_FILE"
+validate_bookmarks() {
+	mkdir -p "$(dirname "$BOOKMARKS_FILE")"
+	if [[ ! -f "$BOOKMARKS_FILE" ]]; then
+		printf '%s\n' '[]' >"$BOOKMARKS_FILE"
+		return
+	fi
+
+	# If file is empty/whitespace, initialize it.
+	if [[ ! -s "$BOOKMARKS_FILE" ]] || [[ -z "$(tr -d '[:space:]' <"$BOOKMARKS_FILE")" ]]; then
+		printf '%s\n' '[]' >"$BOOKMARKS_FILE"
+		return
+	fi
+
+	# If invalid JSON, do not clobber; let user fix it.
+	if command -v jq >/dev/null 2>&1; then
+		if ! jq -e 'type == "array"' "$BOOKMARKS_FILE" >/dev/null 2>&1; then
+			notify-send "rofi-url" "Invalid bookmarks JSON: $BOOKMARKS_FILE" -t 3000
+		fi
+	fi
+}
 
 trim() {
-    local s="$1"
-    # trim leading whitespace
-    s="${s#"${s%%[![:space:]]*}"}"
-    # trim trailing whitespace
-    s="${s%"${s##*[![:space:]]}"}"
-    printf '%s' "$s"
+	local s="$1"
+	# trim leading whitespace
+	s="${s#"${s%%[![:space:]]*}"}"
+	# trim trailing whitespace
+	s="${s%"${s##*[![:space:]]}"}"
+	printf '%s' "$s"
 }
 
 # Process bookmarks with improved formatting
 process_bookmarks() {
-    # Create arrays for display and actual URLs
-    declare -a display_items
-    declare -a actual_urls
-    
-    # Process bookmarks with flexible formatting
-    while IFS= read -r line; do
-        line="$(trim "$line")"
-        
-        # Skip empty lines and comments
-        [[ -z "$line" || "$line" =~ ^# ]] && continue
-        
-        local name=""
-        local url=""
-        
-        # Split into name and URL
-        if [[ "$line" == *"="* ]]; then
-            # Format: Display Name = URL
-            name="$(trim "${line%%=*}")"
-            url="$(trim "${line#*=}")"
-        else
-            # URL only
-            url="$line"
-        fi
-        
-        # Only add if URL exists
-        if [[ -n "$url" ]]; then
-            if [[ -n "$name" ]]; then
-                display_items+=("$name")
-            else
-                display_items+=("$url")
-            fi
-            actual_urls+=("$url")
-        fi
-    done <"$BOOKMARKS_FILE"
-    
-    # Add actions
-    display_items+=("➕ Add New Bookmark")
-    display_items+=("✏️ Edit Bookmarks File")
-    
-    # Return arrays (global variables)
-    DISPLAY_ITEMS=("${display_items[@]}")
-    ACTUAL_URLS=("${actual_urls[@]}")
+	# Create arrays for display and actual URLs
+	declare -a display_items
+	declare -a actual_urls
+
+	# If jq is not available, notify user of missing dependencies
+	if ! command -v jq >/dev/null 2>&1; then
+		notify-send "rofi-url" "jq is required to read JSON bookmarks" -t 2500
+		return
+	fi
+
+	# Read and parse bookmarks
+	local sep=$'\x1f'
+
+	while IFS= read -r row; do
+		[[ -z "$row" ]] && continue
+		local label="${row%%$sep*}"
+		local url="${row#*$sep}"
+
+		display_items+=("$label")
+		actual_urls+=("$url")
+	done < <(
+		jq -r '.[] | select(.href? != null) | ((.name // .href) + "\u001f" + .href)' "$BOOKMARKS_FILE"
+	)
+
+	# Add actions
+	display_items+=("➕ Add New Bookmark")
+	display_items+=("✏️ Edit Bookmarks File")
+
+	# Return arrays (global variables)
+	DISPLAY_ITEMS=("${display_items[@]}")
+	ACTUAL_URLS=("${actual_urls[@]}")
 }
 
 # Main function
 main() {
-    process_bookmarks
-    
-    # Display with Rofi
-    selection=$(printf '%s\n' "${DISPLAY_ITEMS[@]}" | rofi -dmenu -p " Bookmarks" -i -matching prefix)
-    
-    case "$selection" in
-        "➕ Add New Bookmark")
-            add_bookmark
-        ;;
-        "✏️ Edit Bookmarks File")
-            edit_bookmarks_file
-        ;;
-        *)
-            local url
-            # Find the index of the selected item
-            for i in "${!DISPLAY_ITEMS[@]}"; do
-                if [[ "${DISPLAY_ITEMS[$i]}" == "$selection" ]]; then
-                    url="${ACTUAL_URLS[$i]}"
-                    open_url "$url"
-                    break
-                fi
-            done
-            
-            # Opoen Custom URL
-            if [[ -z "$url" ]]; then
-                url=$selection
-                open_url "$url"
-            fi
-        ;;
-    esac
+	validate_bookmarks
+	process_bookmarks
+
+	# Display with Rofi
+	selection=$(printf '%s\n' "${DISPLAY_ITEMS[@]}" | rofi -dmenu -p " Bookmarks" -i -matching prefix)
+
+	case "$selection" in
+	"➕ Add New Bookmark")
+		add_bookmark
+		;;
+	"✏️ Edit Bookmarks File")
+		edit_bookmarks_file
+		;;
+	*)
+		local url
+		# Find the index of the selected item
+		for i in "${!DISPLAY_ITEMS[@]}"; do
+			if [[ "${DISPLAY_ITEMS[$i]}" == "$selection" ]]; then
+				url="${ACTUAL_URLS[$i]}"
+				open_url "$url"
+				break
+			fi
+		done
+
+		# Opoen Custom URL
+		if [[ -z "$url" ]]; then
+			url=$selection
+			open_url "$url"
+		fi
+		;;
+	esac
 }
 
 # Open URL with default browser
 open_url() {
-    local url="$1"
-    
-    if [ -n "$url" ]; then
-        # Add protocol if missing
-        if [[ ! "$url" =~ ^(http|https|ftp):// ]]; then
-            url="https://$url"
-        fi
-        
-        xdg-open "$url"
-    fi
+	local url="$1"
+
+	if [ -n "$url" ]; then
+		# Add protocol if missing
+		if [[ ! "$url" =~ ^(http|https|ftp):// ]]; then
+			url="https://$url"
+		fi
+
+		xdg-open "$url"
+	fi
 }
 
 # Add a new bookmark
 add_bookmark() {
-    # Get bookmark name
-    name=$(rofi -dmenu -p "📝 Bookmark Name")
-    if [[ -z "$name" ]]; then
-        return
-    fi
-    
-    # Get URL
-    local url
-    url=$(rofi -dmenu -p "🌐 URL")
-    if [[ -z "$url" ]]; then
-        return
-    fi
-    
-    # Add to bookmarks file
-    echo "$(trim "$name") = $(trim "$url")" >>"$BOOKMARKS_FILE"
-    notify-send "Bookmark Added" "$name added to bookmarks" -t 2000
+	# Get bookmark name
+	name=$(rofi -dmenu -p "📝 Bookmark Name")
+	if [[ -z "$name" ]]; then
+		return
+	fi
+
+	# Get URL
+	local url
+	url=$(rofi -dmenu -p "🌐 URL")
+	if [[ -z "$url" ]]; then
+		return
+	fi
+
+	if ! command -v jq >/dev/null 2>&1; then
+		notify-send "rofi-url" "jq is required to write JSON bookmarks" -t 2500
+		return
+	fi
+
+	local tmp
+	tmp=$(mktemp)
+	jq --arg name "$(trim "$name")" --arg href "$(trim "$url")" \
+		'. + [{name:$name, href:$href}]' \
+		"$BOOKMARKS_FILE" >"$tmp" && mv "$tmp" "$BOOKMARKS_FILE"
+	notify-send "Bookmark Added" "$name added to bookmarks" -t 2000
 }
 
 # Edit bookmarks file
 edit_bookmarks_file() {
-    "$EDITOR" "$BOOKMARKS_FILE"
+	"$EDITOR" "$BOOKMARKS_FILE"
 }
 
 # Run main function
