@@ -52,7 +52,7 @@ if [ -z "$PROFILE_DIR" ]; then
   firefox --headless &
   sleep 5
   killall firefox
-  PROFILE_DIR=$(get_profile)
+  PROFILE_DIR=$(getProfile)
 
   if [ -z "$PROFILE_DIR" ]; then
     echo "❌ Failed to find/create Firefox profile"
