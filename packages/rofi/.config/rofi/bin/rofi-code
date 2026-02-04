@@ -74,7 +74,7 @@ clone_github_repo() {
     fi
 
     # Clone repository
-    clone_repo "$repo_url" "$target_dir" "GitHub"
+    clone_repo "$repo_url" "GitHub"
 }
 
 # Clone Gitee repository
@@ -96,7 +96,7 @@ clone_gitee_repo() {
     fi
 
     # Clone repository
-    clone_repo "$repo_url" "$target_dir" "Gitee"
+    clone_repo "$repo_url" "Gitee"
 }
 
 # Main function
