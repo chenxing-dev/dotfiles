@@ -230,7 +230,7 @@ extension_defaults = widget_defaults.copy()
 
 screens = [
     Screen(
-        wallpaper=os.path.expanduser("~/.config/qtile/wallpaper.png"),
+        wallpaper=os.path.expanduser("~/Pictures/wallpaper.png"),
         wallpaper_mode='stretch',
         bottom=bar.Bar(
             [
