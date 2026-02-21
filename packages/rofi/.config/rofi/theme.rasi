@@ -1,5 +1,5 @@
 configuration {
-    font: "FiraCode Nerd Font 12";
+    font: "FiraCode Nerd Font, Microsoft YaHei 12";
 }
 
 * {
