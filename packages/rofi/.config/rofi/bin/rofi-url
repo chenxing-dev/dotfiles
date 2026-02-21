@@ -36,80 +36,174 @@ trim() {
 	printf '%s' "$s"
 }
 
-# Process bookmarks with improved formatting
-process_bookmarks() {
-	# Create arrays for display and actual URLs
-	declare -a display_items
-	declare -a actual_urls
-
-	# If jq is not available, notify user of missing dependencies
+# Load bookmarks JSON (array) into a variable
+load_bookmarks_json() {
 	if ! command -v jq >/dev/null 2>&1; then
 		notify-send "rofi-url" "jq is required to read JSON bookmarks" -t 2500
+		return 1
+	fi
+
+	BOOKMARKS_JSON=$(jq -c '.' "$BOOKMARKS_FILE")
+}
+
+build_menu_from_json() {
+	local json_array="$1"
+	local in_submenu="$2" # "1" if stack not empty
+
+	MENU_LABELS=()
+	MENU_TYPES=()   # action|entry
+	MENU_INDEXES=() # index in json array for entry
+
+	# Root-only actions
+	if [[ "$in_submenu" != "1" ]]; then
+		MENU_LABELS+=("🆕 New Tab")
+		MENU_TYPES+=("action")
+		MENU_INDEXES+=(-1)
+	fi
+
+	local sep=$'\x1f'
+	while IFS= read -r row; do
+		[[ -z "$row" ]] && continue
+		local idx="${row%%$sep*}"
+		local label="${row#*$sep}"
+		MENU_LABELS+=("$label")
+		MENU_TYPES+=("entry")
+		MENU_INDEXES+=("$idx")
+	done < <(
+		jq -r 'to_entries[] | ("\(.key)\u001f\((.value.icon // "📄") + " " + (.value.name // .value.href // "Unnamed"))")' <<<"$json_array"
+	)
+
+	# Root-only actions
+	if [[ "$in_submenu" != "1" ]]; then
+		MENU_LABELS+=("➕ Add New Bookmark")
+		MENU_TYPES+=("action")
+		MENU_INDEXES+=(-1)
+		MENU_LABELS+=("✏️ Edit Bookmarks File")
+		MENU_TYPES+=("action")
+		MENU_INDEXES+=(-1)
+	fi
+
+	# Submenu-only action (at bottom)
+	if [[ "$in_submenu" == "1" ]]; then
+		MENU_LABELS+=("🔙 Back")
+		MENU_TYPES+=("action")
+		MENU_INDEXES+=(-1)
+	fi
+}
+
+open_search_dialog() {
+	local entry_json="$1"
+	local name
+	local icon
+	local search_url
+
+	name=$(jq -r '.name // "Search"' <<<"$entry_json")
+	icon=$(jq -r '.icon // "🔍"' <<<"$entry_json")
+	search_url=$(jq -r '.search // empty' <<<"$entry_json")
+
+	if [[ -z "$search_url" ]]; then
+		# Fallback: if no explicit search URL, open href if present
+		open_url "$(jq -r '.href // empty' <<<"$entry_json")"
 		return
 	fi
 
-	# Add New Tab option at the top
-	display_items+=("New Tab")
-	actual_urls+=("$STARTPAGE_URL")
+	local term
+	term=$(rofi -dmenu -p "$icon $name" -i)
+	term=$(trim "$term")
+	[[ -z "$term" ]] && return
 
-	# Read and parse bookmarks
-	local sep=$'\x1f'
+	local encoded
+	encoded=$(jq -nr --arg v "$term" '$v|@uri')
 
-	while IFS= read -r row; do
-		[[ -z "$row" ]] && continue
-		local label="${row%%$sep*}"
-		local url="${row#*$sep}"
+	local url
+	if [[ "$search_url" == *"{}"* ]]; then
+		url="${search_url//\{\}/$encoded}"
+	else
+		url="${search_url}${encoded}"
+	fi
 
-		display_items+=("$label")
-		actual_urls+=("$url")
-	done < <(
-		jq -r '.[] | select(.href? != null) | ((.name // .href) + "\u001f" + .href)' "$BOOKMARKS_FILE"
-	)
-
-	# Add actions
-	display_items+=("➕ Add New Bookmark")
-	actual_urls+=("")
-	display_items+=("✏️ Edit Bookmarks File")
-	actual_urls+=("")
-
-	# Return arrays (global variables)
-	DISPLAY_ITEMS=("${display_items[@]}")
-	ACTUAL_URLS=("${actual_urls[@]}")
+	open_url "$url"
 }
 
-# Main function
 main() {
 	validate_bookmarks
-	process_bookmarks
+	load_bookmarks_json || return 1
 
-	# Display with Rofi
-	selection=$(printf '%s\n' "${DISPLAY_ITEMS[@]}" | rofi -dmenu -p " Bookmarks" -i -matching prefix)
+	local current_json="$BOOKMARKS_JSON"
+	local current_path="~"
+	local -a json_stack=()
+	local -a path_stack=()
 
-	case "$selection" in
-	"➕ Add New Bookmark")
-		add_bookmark
-		;;
-	"✏️ Edit Bookmarks File")
-		edit_bookmarks_file
-		;;
-	*)
-		local url
-		# Find the index of the selected item
-		for i in "${!DISPLAY_ITEMS[@]}"; do
-			if [[ "${DISPLAY_ITEMS[$i]}" == "$selection" ]]; then
-				url="${ACTUAL_URLS[$i]}"
-				open_url "$url"
-				break
+	while true; do
+		local in_submenu=0
+		((${#json_stack[@]} > 0)) && in_submenu=1
+
+		build_menu_from_json "$current_json" "$in_submenu"
+
+		local selection
+		selection=$(printf '%s\n' "${MENU_LABELS[@]}" | rofi -dmenu -p " $current_path" -i -matching prefix)
+		[[ -z "$selection" ]] && exit 0
+
+		case "$selection" in
+		"🆕 New Tab")
+			open_url "$STARTPAGE_URL"
+			;;
+		"🔙 Back")
+			if ((${#json_stack[@]} > 0)); then
+				current_json="${json_stack[-1]}"
+				unset 'json_stack[-1]'
+				current_path="${path_stack[-1]}"
+				unset 'path_stack[-1]'
 			fi
-		done
+			;;
+		"➕ Add New Bookmark")
+			add_bookmark
+			load_bookmarks_json || return 1
+			current_json="$BOOKMARKS_JSON"
+			current_path="~"
+			json_stack=()
+			path_stack=()
+			;;
+		"✏️ Edit Bookmarks File")
+			edit_bookmarks_file
+			;;
+		*)
+			local found=0
+			local idx=-1
+			for i in "${!MENU_LABELS[@]}"; do
+				if [[ "${MENU_LABELS[$i]}" == "$selection" && "${MENU_TYPES[$i]}" == "entry" ]]; then
+					idx="${MENU_INDEXES[$i]}"
+					found=1
+					break
+				fi
+			done
 
-		# Opoen Custom URL
-		if [[ -z "$url" ]]; then
-			url=$selection
-			open_url "$url"
-		fi
-		;;
-	esac
+			if [[ "$found" != "1" || "$idx" == "-1" ]]; then
+				# Treat input as a custom URL
+				open_url "$selection"
+				continue
+			fi
+
+			local entry_json
+			entry_json=$(jq -c --argjson i "$idx" '.[$i]' <<<"$current_json")
+			if [[ -z "$entry_json" || "$entry_json" == "null" ]]; then
+				continue
+			fi
+
+			# Match startpage behavior: content > dialog/search > href
+			if jq -e '.content? | type == "array" and length > 0' <<<"$entry_json" >/dev/null 2>&1; then
+				json_stack+=("$current_json")
+				path_stack+=("$current_path")
+				current_json=$(jq -c '.content' <<<"$entry_json")
+				current_path+="/$(jq -r '.name // ""' <<<"$entry_json")"
+			elif jq -e '(.dialog? == true) or (.search? != null)' <<<"$entry_json" >/dev/null 2>&1; then
+				open_search_dialog "$entry_json"
+			else
+				open_url "$(jq -r '.href // empty' <<<"$entry_json")"
+			fi
+			;;
+		esac
+	done
 }
 
 # Open URL with default browser
@@ -122,7 +216,9 @@ open_url() {
 			url="https://$url"
 		fi
 
-		xdg-open "$url"
+		# Launch and exit so rofi doesn't pop back up
+		xdg-open "$url" >/dev/null 2>&1 &
+		exit 0
 	fi
 }
 
