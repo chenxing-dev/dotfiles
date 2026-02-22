@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# System control menu with confirmation
+
+backend="auto"
+while [[ $# -gt 0 ]]; do
+	case "$1" in
+	--backend)
+		backend="${2:-}"
+		shift 2
+		;;
+	-h | --help)
+		echo "Usage: dmenu-system [--backend rofi|fuzzel]" >&2
+		exit 0
+		;;
+	*)
+		echo "Unknown arg: $1" >&2
+		exit 2
+		;;
+	esac
+done
+
+script_dir="$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=/dev/null
+source "$script_dir/dmenu-backend.sh"
+use_dmenu_backend "$backend"
+
+options=(
+	" Shutdown"
+	" Reboot"
+	"󰗼 Quit session"
+)
+
+selected=$(printf '%s\n' "${options[@]}" | dmenu_list "System")
+
+confirm() {
+	echo -e "Yes\nNo" | dmenu_list "Confirm $1?" normal
+}
+
+quit_session() {
+	# Prefer session-manager termination (DE/compositor agnostic).
+	if command -v loginctl >/dev/null 2>&1; then
+		if [[ -n "${XDG_SESSION_ID:-}" ]]; then
+			loginctl terminate-session "$XDG_SESSION_ID" && return 0
+		fi
+		if [[ -n "${USER:-}" ]]; then
+			loginctl terminate-user "$USER" && return 0
+		fi
+	fi
+
+	# Fallback: ask systemd user manager to exit (may or may not end the graphical session).
+	if command -v systemctl >/dev/null 2>&1; then
+		systemctl --user exit && return 0
+	fi
+
+	echo "No supported session quit command found" >&2
+	return 127
+}
+
+case $selected in
+" Shutdown")
+	[[ $(confirm "Shutdown") == "Yes" ]] && systemctl poweroff
+	;;
+" Reboot")
+	[[ $(confirm "Reboot") == "Yes" ]] && systemctl reboot
+	;;
+"󰗼 Quit session")
+	[[ $(confirm "Quit session") == "Yes" ]] && quit_session
+	;;
+esac
