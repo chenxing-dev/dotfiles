@@ -1,0 +1,158 @@
+#!/usr/bin/env bash
+# dmenu-iwctl: WiFi Management with iwd/iwctl
+# Requires: iwd, notify-send
+
+backend="auto"
+while [[ $# -gt 0 ]]; do
+	case "$1" in
+	--backend)
+		backend="${2:-}"
+		shift 2
+		;;
+	-h | --help)
+		echo "Usage: dmenu-iwctl [--backend rofi|fuzzel]" >&2
+		exit 0
+		;;
+	*)
+		echo "Unknown arg: $1" >&2
+		exit 2
+		;;
+	esac
+done
+
+script_dir="$(CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=/dev/null
+source "$script_dir/dmenu-backend.sh"
+use_dmenu_backend "$backend"
+
+# Configuration
+IWCTL_CMD="iwctl"
+INTERFACE="wlan0" # Default wireless interface
+
+is_nmcli_managing_wifi() {
+	command -v nmcli >/dev/null 2>&1 || return 1
+
+	local running
+	running="$(nmcli -t -f RUNNING general status 2>/dev/null | head -n1)"
+	[[ "$running" == "running" ]] || return 1
+
+	local type_state
+	type_state="$(nmcli -t -f DEVICE,TYPE,STATE device status 2>/dev/null | awk -F: -v dev="$INTERFACE" '$1==dev{print $2":"$3; exit}')"
+	[[ -n "$type_state" ]] || return 1
+
+	local dev_type dev_state
+	dev_type="${type_state%%:*}"
+	dev_state="${type_state#*:}"
+
+	[[ "$dev_type" == "wifi" ]] || return 1
+	[[ "$dev_state" != "unmanaged" ]] || return 1
+
+	return 0
+}
+
+# If NetworkManager is managing Wi-Fi, delegate to the nmcli UI.
+if is_nmcli_managing_wifi; then
+	if [[ -x "$script_dir/dmenu-nmcli" ]]; then
+		exec "$script_dir/dmenu-nmcli" --backend "$backend"
+	fi
+	exec dmenu-nmcli --backend "$backend"
+fi
+
+get_connected_ssid() {
+	local ssid=""
+
+	# iwd / iwctl (when iwd manages the station)
+	ssid=$(
+		$IWCTL_CMD station "$INTERFACE" show 2>/dev/null |
+			awk -F': *' '/Connected network/ {print $2; exit}' |
+			sed -e 's/[[:space:]]*$//'
+	)
+
+	# Kernel wireless info (works with NetworkManager too)
+	if [[ -z "$ssid" ]] && command -v iwgetid >/dev/null 2>&1; then
+		ssid="$(iwgetid -r 2>/dev/null || true)"
+	fi
+
+	printf '%s' "$ssid"
+}
+
+# Main menu
+main_menu() {
+	connected_ssid="$(get_connected_ssid)"
+
+	options=()
+
+	local status_text
+	if [[ -n "$connected_ssid" ]]; then
+		status_text="$connected_ssid"
+	else
+		status_text="Disconnected"
+	fi
+
+	options+=("  Status: $status_text")
+	options+=("  Available Networks")
+	options+=("  Rescan Networks")
+	if [[ -n "$connected_ssid" ]]; then
+		options+=("  Disconnect")
+	fi
+
+	printf '%s\n' "${options[@]}"
+}
+
+# Scan networks
+scan_networks() {
+	$IWCTL_CMD station $INTERFACE scan
+	sleep 2 # Wait for scan to complete
+	notify-send "Network Scan" "Scanning for available networks..." -i network-wireless
+}
+
+# List available networks
+list_networks() {
+	scan_networks
+	$IWCTL_CMD station $INTERFACE get-networks |
+		awk 'NR>5 {print $1}' |
+		dmenu_list "  Networks"
+}
+
+# Connect to network
+connect_to_network() {
+	ssid="$1"
+	echo "Debug: $1"
+	password=$(dmenu_password " Password for $ssid")
+
+	if [ -n "$password" ]; then
+		# Connect using iwctl
+		if $IWCTL_CMD station $INTERFACE connect "$ssid" --passphrase "$password"; then
+			notify-send "Connected" "Joined $ssid" -i network-wireless
+		else
+			notify-send "Connection Failed" "Could not connect to $ssid" -i network-wireless-error
+		fi
+	fi
+}
+
+# Connect to known network
+connect_known() {
+	ssid="$1"
+	if $IWCTL_CMD station $INTERFACE connect "$ssid"; then
+		notify-send "Connected" "Joined $ssid" -i network-wireless
+	else
+		notify-send "Connection Failed" "Could not connect to $ssid" -i network-wireless-error
+	fi
+}
+
+# Execute based on selection
+selected=$(main_menu | dmenu_list "  WiFi")
+
+case "$selected" in
+"  Rescan Networks")
+	scan_networks
+	;;
+"  Available Networks")
+	ssid=$(list_networks)
+	[ -n "$ssid" ] && connect_to_network "$ssid"
+	;;
+"  Disconnect")
+	$IWCTL_CMD station $INTERFACE disconnect
+	notify-send "Disconnected" "WiFi connection terminated" -i network-wireless-disconnected
+	;;
+esac
