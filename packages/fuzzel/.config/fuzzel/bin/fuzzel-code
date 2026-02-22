@@ -1,0 +1,209 @@
+#!/usr/bin/env bash
+# Code Repo Launcher (fuzzel)
+# Features: open repos, clone from GitHub/Gitee, history tracking
+
+set -euo pipefail
+
+# Configuration
+CLONE_DIR="$HOME" # Default directory for cloned repositories
+# Share the same history as rofi-code to keep a single MRU list.
+HISTORY_FILE="$HOME/.cache/rofi-code-history"
+MAX_HISTORY=15
+
+mkdir -p "$CLONE_DIR" "$(dirname "$HISTORY_FILE")"
+touch "$HISTORY_FILE"
+
+show_history() {
+	awk 'NF && !seen[$0]++' "$HISTORY_FILE" | head -n "$MAX_HISTORY"
+}
+
+add_history() {
+	local entry="${1:-}"
+	[[ -z "$entry" ]] && return 0
+
+	local -a existing_lines=()
+	if [[ -f "$HISTORY_FILE" ]]; then
+		mapfile -t existing_lines <"$HISTORY_FILE"
+	fi
+
+	local -a out_lines=("$entry")
+	local line
+	for line in "${existing_lines[@]}"; do
+		[[ -z "$line" ]] && continue
+		[[ "$line" == "$entry" ]] && continue
+		out_lines+=("$line")
+		((${#out_lines[@]} >= MAX_HISTORY)) && break
+	done
+
+	printf '%s\n' "${out_lines[@]}" >"$HISTORY_FILE"
+}
+
+remove_history_entry() {
+	local entry="${1:-}"
+	[[ -z "$entry" ]] && return 0
+	local tmp
+	tmp="${HISTORY_FILE}.tmp"
+	grep -vxF "$entry" "$HISTORY_FILE" >"$tmp" 2>/dev/null || true
+	mv "$tmp" "$HISTORY_FILE"
+}
+
+# dmenu prompt with fuzzel.
+# stdin: candidates; stdout: selected line
+fuzzel_dmenu() {
+	local prompt="$1"
+	shift || true
+
+	fuzzel --dmenu --prompt "$prompt" --match-mode=fuzzy "$@"
+}
+
+# Ask for free-form input (no list).
+prompt_text() {
+	local prompt="$1"
+	shift || true
+	# --prompt-only doesn't wait for stdin and implies --lines=0.
+	fuzzel --dmenu --prompt-only "$prompt" "$@"
+}
+
+history_entry_for_path() {
+	local path="$1"
+	if [[ "$path" == "$HOME/"* ]]; then
+		printf '%s' "${path#"$HOME"/}"
+	else
+		printf '%s' "$path"
+	fi
+}
+
+resolve_history_path() {
+	local entry="$1"
+	if [[ "$entry" == /* ]]; then
+		printf '%s' "$entry"
+	else
+		printf '%s' "$HOME/$entry"
+	fi
+}
+
+clone_repo() {
+	local repo_url="$1"
+	local service_name="$2"
+	local repo_name="$3"
+
+	local target_dir="$CLONE_DIR/$repo_name"
+	local clone_result
+	local exit_code
+
+	clone_result=$(git clone "$repo_url" "$target_dir" 2>&1) || exit_code=$?
+	exit_code=${exit_code:-0}
+
+	if [[ $exit_code -eq 0 ]]; then
+		notify-send "$service_name Repository Cloned" "Successfully cloned to $target_dir" -t 3000
+		add_history "$(history_entry_for_path "$target_dir")"
+		code "$target_dir"
+	else
+		local error_msg
+		error_msg=$(printf '%s\n' "$clone_result" | grep -iE 'error|fatal|failed' | head -1 || true)
+		error_msg=${error_msg:-"Clone failed with exit code $exit_code"}
+		notify-send "Clone Failed" "$error_msg" -t 5000 -u critical
+	fi
+}
+
+clone_github_repo() {
+	local repo_input
+	repo_input=$(prompt_text " Repo (user/repo)" )
+	[[ -z "$repo_input" ]] && return 0
+
+	local repo_url repo_name
+	if [[ "$repo_input" == */* && "$repo_input" != *://* ]]; then
+		repo_url="https://github.com/$repo_input.git"
+		repo_name=$(basename "$repo_input")
+	else
+		repo_url="$repo_input"
+		repo_name=$(basename "$repo_input" .git)
+	fi
+
+	clone_repo "$repo_url" "GitHub" "$repo_name"
+}
+
+clone_gitee_repo() {
+	local repo_input
+	repo_input=$(prompt_text " Repo (user/repo)" )
+	[[ -z "$repo_input" ]] && return 0
+
+	local repo_url repo_name
+	if [[ "$repo_input" == */* && "$repo_input" != *://* ]]; then
+		repo_url="https://gitee.com/$repo_input.git"
+		repo_name=$(basename "$repo_input")
+	else
+		repo_url="$repo_input"
+		repo_name=$(basename "$repo_input" .git)
+	fi
+
+	clone_repo "$repo_url" "Gitee" "$repo_name"
+}
+
+main() {
+	local history
+	history=$(show_history)
+
+	local -a actions=(
+		" New repository..."
+		" Clone GitHub repo..."
+		" Clone Gitee repo..."
+		" Search GitHub..."
+	)
+
+	local options
+	if [[ -z "$history" ]]; then
+		options=$(printf '%s\n' "${actions[@]}")
+	else
+		options=$(printf '%s\n' "$history" "────────────────────────────" "${actions[@]}")
+	fi
+
+	local selected
+	selected=$(printf '%s' "$options" | fuzzel_dmenu " Repositories:")
+	[[ -z "$selected" ]] && exit 0
+
+	case "$selected" in
+		" Clone GitHub repo...")
+			clone_github_repo
+			;;
+		" Clone Gitee repo...")
+			clone_gitee_repo
+			;;
+		" New repository...")
+			local new_repo
+			new_repo=$(prompt_text " Create repo in:" --search "$HOME/")
+			if [[ -n "$new_repo" ]]; then
+				local full_path
+				full_path="${new_repo/#\~/$HOME}"
+				mkdir -p "$full_path"
+				(cd "$full_path" && git init)
+				code "$full_path"
+				add_history "$(history_entry_for_path "$full_path")"
+			fi
+			;;
+		" Search GitHub...")
+			local query
+			query=$(prompt_text " Search GitHub:" )
+			if [[ -n "$query" ]]; then
+				query=${query// /%20}
+				xdg-open "https://github.com/search?q=$query&type=repositories"
+			fi
+			;;
+		"────────────────────────────")
+			# ignore separator
+			;;
+		*)
+			local full_path
+			full_path=$(resolve_history_path "$selected")
+			if [[ -d "$full_path" ]]; then
+				add_history "$selected"
+				code "$full_path"
+			else
+				remove_history_entry "$selected"
+				notify-send "Repo Not Found" "Directory not found: $full_path" -t 5000
+			fi
+			;;
+	esac
+}
+
+main
