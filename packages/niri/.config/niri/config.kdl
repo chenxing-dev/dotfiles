@@ -365,7 +365,11 @@ binds {
     Mod+Return hotkey-overlay-title="Open a Terminal: wezterm" { spawn "wezterm"; }
     Mod+D hotkey-overlay-title="Run an Application: fuzzel" { spawn "fuzzel"; }
     Super+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn "swaylock"; }
-    Mod+C hotkey-overlay-title="Open repos in VS Code" { spawn-sh "~/.local/bin/fuzzel-code"; }
+    Mod+C hotkey-overlay-title="Open repos in VS Code" { spawn-sh "~/.local/bin/dmenu-code --backend fuzzel"; }
+    Mod+N hotkey-overlay-title="Launch network manager" { spawn-sh "~/.local/bin/dmenu-iwctl --backend fuzzel"; }
+    Mod+Shift+E hotkey-overlay-title="Launch power menu" { spawn-sh "~/.local/bin/dmenu-system --backend fuzzel"; }
+    Mod+E hotkey-overlay-title="Launch Yazi file manager" { spawn-sh "wezterm start -- yazi"; }
+    Mod+B hotkey-overlay-title="Launch web page in browser" { spawn-sh "~/.local/bin/dmenu-url --backend fuzzel"; }
 
     // Use spawn-sh to run a shell command. Do this if you need pipes, multiple commands, etc.
     // Note: the entire command goes as a single argument. It's passed verbatim to `sh -c`.
@@ -615,8 +619,7 @@ binds {
     Mod+Escape allow-inhibiting=false { toggle-keyboard-shortcuts-inhibit; }
 
     // The quit action will show a confirmation dialog to avoid accidental exits.
-    Mod+Shift+E { quit; }
-    Ctrl+Alt+Delete { quit; }
+    Ctrl+Alt+Delete hotkey-overlay-title="Quit Niri" { quit; }
 
     // Powers off the monitors. To turn them back on, do any input like
     // moving the mouse or pressing any other key.
