@@ -1,8 +1,31 @@
 #!/usr/bin/env bash
 # Dedicated URL launcher with bookmark support
 
+backend="auto"
+while [[ $# -gt 0 ]]; do
+	case "$1" in
+	--backend)
+		backend="${2:-}"
+		shift 2
+		;;
+	-h | --help)
+		echo "Usage: dmenu-url [--backend rofi|fuzzel]" >&2
+		exit 0
+		;;
+	*)
+		echo "Unknown arg: $1" >&2
+		exit 2
+		;;
+	esac
+done
+
+script_dir="$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=/dev/null
+source "$script_dir/dmenu-backend.sh"
+use_dmenu_backend "$backend"
+
 # Configuration
-BOOKMARKS_FILE="$HOME/.config/rofi/bookmarks.json"
+BOOKMARKS_FILE="$HOME/.config/bookmarks.json"
 EDITOR="code"
 STARTPAGE_URL="chenxing.dev"
 
@@ -22,7 +45,7 @@ validate_bookmarks() {
 	# If invalid JSON, do not clobber; let user fix it.
 	if command -v jq >/dev/null 2>&1; then
 		if ! jq -e 'type == "array"' "$BOOKMARKS_FILE" >/dev/null 2>&1; then
-			notify-send "rofi-url" "Invalid bookmarks JSON: $BOOKMARKS_FILE" -t 3000
+			notify-send "demnu-url" "Invalid bookmarks JSON: $BOOKMARKS_FILE" -t 3000
 		fi
 	fi
 }
@@ -39,7 +62,7 @@ trim() {
 # Load bookmarks JSON (array) into a variable
 load_bookmarks_json() {
 	if ! command -v jq >/dev/null 2>&1; then
-		notify-send "rofi-url" "jq is required to read JSON bookmarks" -t 2500
+		notify-send "dmenu-url" "jq is required to read JSON bookmarks" -t 2500
 		return 1
 	fi
 
@@ -108,7 +131,7 @@ open_search_dialog() {
 	fi
 
 	local term
-	term=$(rofi -dmenu -p "$icon $name" -i)
+	term=$(dmenu_prompt "$icon $name" "" true)
 	term=$(trim "$term")
 	[[ -z "$term" ]] && return
 
@@ -141,7 +164,7 @@ main() {
 		build_menu_from_json "$current_json" "$in_submenu"
 
 		local selection
-		selection=$(printf '%s\n' "${MENU_LABELS[@]}" | rofi -dmenu -p " $current_path" -i -matching prefix)
+		selection=$(printf '%s\n' "${MENU_LABELS[@]}" | dmenu_list " $current_path" prefix true)
 		[[ -z "$selection" ]] && exit 0
 
 		case "$selection" in
@@ -225,20 +248,20 @@ open_url() {
 # Add a new bookmark
 add_bookmark() {
 	# Get bookmark name
-	name=$(rofi -dmenu -p "📝 Bookmark Name")
+	name=$(dmenu_prompt "📝 Bookmark Name")
 	if [[ -z "$name" ]]; then
 		return
 	fi
 
 	# Get URL
 	local url
-	url=$(rofi -dmenu -p "🌐 URL")
+	url=$(dmenu_prompt "🌐 URL")
 	if [[ -z "$url" ]]; then
 		return
 	fi
 
 	if ! command -v jq >/dev/null 2>&1; then
-		notify-send "rofi-url" "jq is required to write JSON bookmarks" -t 2500
+		notify-send "dmenu-url" "jq is required to write JSON bookmarks" -t 2500
 		return
 	fi
 
