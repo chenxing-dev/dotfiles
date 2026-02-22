@@ -30,46 +30,12 @@ import subprocess
 from libqtile import bar, layout, qtile, widget, hook
 from libqtile.config import Click, Drag, Group, Key, Match, Screen
 from libqtile.lazy import lazy
-from libqtile.utils import guess_terminal
 
 
 @hook.subscribe.startup_once
 def autostart():
     script = os.path.expanduser("~/.config/qtile/autostart.sh")
     subprocess.run([script])
-
-
-def get_network_manager():
-    """Determine which network manager is active"""
-    try:
-        # Check if NetworkManager is running
-        nm_status = subprocess.run(
-            ["systemctl", "is-active", "NetworkManager"],
-            capture_output=True, text=True
-        ).stdout.strip()
-
-        # Check if iwd is running
-        iwd_status = subprocess.run(
-            ["systemctl", "is-active", "iwd"],
-            capture_output=True, text=True
-        ).stdout.strip()
-
-        # Prioritize NetworkManager if both are active
-        if nm_status == "active":
-            return os.path.expanduser("~/.local/bin/rofi-nmcli")
-        elif iwd_status == "active":
-            return os.path.expanduser("~/.local/bin/rofi-iwctl")
-
-        # Check for installed commands as fallback
-        if subprocess.run(["which", "nmcli"], stdout=subprocess.DEVNULL).returncode == 0:
-            return os.path.expanduser("~/.local/bin/rofi-nmcli")
-        elif subprocess.run(["which", "iwctl"], stdout=subprocess.DEVNULL).returncode == 0:
-            return os.path.expanduser("~/.local/bin/rofi-iwctl")
-    except Exception:
-        pass
-
-    # Default fallback
-    return os.path.expanduser("~/.local/bin/rofi-nmcli")
 
 
 mod = "mod4"
@@ -117,15 +83,16 @@ keys = [
 
     # Launchers
     Key([mod], "b", lazy.spawn(os.path.expanduser(
-        "~/.local/bin/rofi-url")), desc="Url bookmark launcher"),
+        "~/.local/bin/dmenu-url --backend rofi")), desc="Url bookmark launcher"),
     Key([mod], "c", lazy.spawn(os.path.expanduser(
-        "~/.local/bin/rofi-code")), desc="Open repos in VS Code"),
+        "~/.local/bin/dmenu-code --backend rofi")), desc="Open repos in VS Code"),
     Key([mod], "d", lazy.spawn("rofi -show drun"), desc="Application launcher"),
-    Key([mod,], "e", lazy.spawn("wezterm start -- yazi"),
+    Key([mod], "e", lazy.spawn("wezterm start -- yazi"),
         desc="Launch Yazi file manager"),
     Key([mod, "shift"], "e", lazy.spawn(os.path.expanduser(
-        "~/.local/bin/rofi-system")), desc="Power menu"),
-    Key([mod], "n", lazy.spawn(get_network_manager()),
+        "~/.local/bin/dmenu-system --backend rofi")), desc="Power menu"),
+    Key([mod], "n", lazy.spawn(os.path.expanduser(
+        "~/.local/bin/dmenu-iwctl --backend rofi")),
         desc="Launch network manager"),
     Key([mod], "r", lazy.spawncmd(), desc="Spawn a command using a prompt widget"),
     Key([mod], "Return", lazy.spawn(terminal), desc="Launch terminal"),
