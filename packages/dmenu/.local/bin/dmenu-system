@@ -39,11 +39,11 @@ confirm() {
 quit_session() {
 	# Prefer session-manager termination (DE/compositor agnostic).
 	if command -v loginctl >/dev/null 2>&1; then
-		if [[ -n "${XDG_SESSION_ID:-}" ]]; then
-			loginctl terminate-session "$XDG_SESSION_ID" && return 0
-		fi
 		if [[ -n "${USER:-}" ]]; then
 			loginctl terminate-user "$USER" && return 0
+		fi
+		if [[ -n "${XDG_SESSION_ID:-}" ]]; then
+			loginctl terminate-session "$XDG_SESSION_ID" && return 0
 		fi
 	fi
 
