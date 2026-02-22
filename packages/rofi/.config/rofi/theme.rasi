@@ -6,7 +6,7 @@ configuration {
     background-color:   #ffffff;
     foreground-color:   #0e1116;
     border-color:       #66707b;
-    selected-color:rgb(138, 141, 145);
+    selected-color:     #8a8d91;
     accent-color:       #0349b4;
     urgent-color:       #a0111f;
 }
