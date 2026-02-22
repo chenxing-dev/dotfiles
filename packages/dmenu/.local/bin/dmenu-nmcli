@@ -1,0 +1,178 @@
+#!/usr/bin/env bash
+# dmenu-nmcli: Network Management with Rofi/Fuzzel
+# Features: WiFi connection management and VPN control
+
+backend="auto"
+while [[ $# -gt 0 ]]; do
+	case "$1" in
+	--backend)
+		backend="${2:-}"
+		shift 2
+		;;
+	-h | --help)
+		echo "Usage: dmenu-nmcli [--backend rofi|fuzzel]" >&2
+		exit 0
+		;;
+	*)
+		echo "Unknown arg: $1" >&2
+		exit 2
+		;;
+	esac
+done
+
+script_dir="$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=/dev/null
+source "$script_dir/dmenu-backend.sh"
+use_dmenu_backend "$backend"
+
+# Configuration
+ICON_WIFI=" "
+ICON_ETHERNET="󰈀 "
+ICON_LOCK=" "
+ICON_OFF=" "
+ICON_ADD=" "
+ICON_REFRESH=" "
+ICON_SETTINGS=" "
+
+# Main menu
+main_menu() {
+	# Get active connection
+	active_conn=$(nmcli -t -f NAME,DEVICE connection show --active |
+		grep -v 'lo:' |
+		awk -F: '{print $1,$2}' |
+		head -1)
+
+	# Extract connection name and type
+	conn_name=$(echo "$active_conn" | cut -d' ' -f1)
+	conn_type=$(echo "$active_conn" | cut -d' ' -f2)
+
+	# Determine status icon and text
+	if [[ -n "$conn_name" ]]; then
+		if [[ "$conn_type" == "wlan0" ]]; then
+			status_icon=$ICON_WIFI
+			status_text="$conn_name"
+		else
+			status_icon=$ICON_ETHERNET
+			status_text="$conn_name"
+		fi
+	else
+		status_icon=$ICON_OFF
+		status_text="Offline"
+	fi
+
+	# Build menu options
+	options=(
+		"$status_icon Status: $status_text"
+		"$ICON_WIFI Available Networks"
+		"$ICON_WIFI Known Networks"
+		"$ICON_REFRESH Rescan Networks"
+		"$ICON_SETTINGS nm-connection-editor"
+	)
+
+	printf '%s\n' "${options[@]}"
+}
+
+# List available networks
+list_networks() {
+	# Scan if no networks found
+	if ! nmcli -t -f SSID device wifi list | grep -q '[^[:space:]]'; then
+		nmcli device wifi rescan
+		sleep 2
+	fi
+
+	networks=$(nmcli -t -f SSID,SECURITY,SIGNAL,BARS device wifi list |
+		awk -F: '{ 
+                   ssid = $1 ? $1 : "--"; 
+                   security = ($2 == "") ? "Open" : $2; 
+                   printf "%-15s %-10s %s\n", ssid, security, $4 
+               }' | head -3)
+
+	selected=$(echo -e "$networks" | dmenu_list "$ICON_WIFI Networks" fuzzy)
+
+	if [ -z "$selected" ]; then
+		return
+	fi
+
+	ssid=$(echo "$selected" | awk '{print $1}')
+	connect_to_network "$ssid"
+}
+
+# Connect to network
+connect_to_network() {
+	ssid="$1"
+
+	# Check if already connected
+	current_ssid=$(nmcli -t -f active,ssid device wifi | awk -F: '$1 == "yes" {print $2}')
+	if [ "$current_ssid" = "$ssid" ]; then
+		notify-send "Already Connected" "You are already connected to $ssid" -i network-wireless
+		return
+	fi
+
+	# Check if known
+	if nmcli -t -f name connection show | grep -q "^$ssid$"; then
+		nmcli connection up "$ssid"
+		notify-send "Connected" "Joined network: $ssid" -i network-wireless
+	else
+		# Get password
+		password=$(dmenu_password "$ICON_LOCK Password for $ssid")
+
+		if [ -n "$password" ]; then
+			# Connect to new network
+			if nmcli device wifi connect "$ssid" password "$password"; then
+				notify-send "Connected" "Joined network: $ssid" -i network-wireless
+			else
+				notify-send "Connection Failed" "Could not connect to $ssid" -i network-wireless-error
+			fi
+		fi
+	fi
+}
+
+# List known networks
+known_networks() {
+	networks=$(nmcli -t -f name,TYPE connection show | grep 'wireless' | awk -F: '{print $1}')
+
+	# Add actions
+	networks+="\n$ICON_ADD Create New Connection"
+	networks+="\n$ICON_OFF Forget Selected Network"
+
+	selected=$(echo -e "$networks" | dmenu_list "$ICON_WIFI Known Networks" fuzzy)
+
+	if [ -z "$selected" ]; then
+		return
+	fi
+
+	case "$selected" in
+	"$ICON_ADD Create New Connection")
+		nm-connection-editor
+		;;
+	"$ICON_OFF Forget Selected Network")
+		network_to_forget=$(echo -e "$networks" | grep -v "$ICON_ADD" | grep -v "$ICON_OFF" |
+			dmenu_list "Select to forget" fuzzy)
+		if [ -n "$network_to_forget" ]; then
+			nmcli connection delete "$network_to_forget" &&
+				notify-send "Network Forgotten" "Removed $network_to_forget" -i network-wireless-disconnected
+		fi
+		;;
+	*)
+		nmcli connection up "$selected" &&
+			notify-send "Connected" "Joined network: $selected" -i network-wireless
+		;;
+	esac
+}
+
+# Execute based on selection
+case $(main_menu | dmenu_list "$ICON_WIFI Network" fuzzy false 0) in
+"$ICON_WIFI Available Networks")
+	list_networks
+	;;
+"$ICON_WIFI Known Networks")
+	known_networks
+	;;
+"$ICON_REFRESH Rescan Networks")
+	nmcli device wifi rescan
+	notify-send "Network Scan" "Scanning for available networks..." -i network-wireless
+	;;
+"$ICON_SETTINGS nm-connection-editor")
+	nm-connection-editor
+	;;
+esac
