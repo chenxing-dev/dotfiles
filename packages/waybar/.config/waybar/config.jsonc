@@ -13,7 +13,8 @@
         "sway/window"
     ],
     "modules-right": [
-        "pulseaudio",
+        "tray",
+        // "pulseaudio",
         "network",
         "power-profiles-daemon",
         // "cpu",
@@ -24,9 +25,8 @@
         "sway/language",
         "battery",
         "battery#bat2",
-        "clock",
-        "tray",
-        "custom/power"
+        // "custom/power",
+        "clock"
     ],
     // Modules configuration
     // "sway/workspaces": {
@@ -76,8 +76,8 @@
         // }
     },
     "clock": {
-        "format": "<span size='14pt'></span> {:L%Y年%m月%e日%H时%M分}",
-        "format-alt": "<span size='14pt'></span> {:L%A, %B %d, %Y}",
+        "format": "{:L%Y年%m月%e日%H时%M分}  ",
+        "format-alt": "{:L%A, %B %d, %Y}  ",
         // "timezone": "Asia/Shanghai",
         "locale": "zh_CN.UTF-8",
         "tooltip-format": "<span font='WenQuanYi Zen Hei Mono'>{calendar}</span>",
