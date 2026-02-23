@@ -1,0 +1,13 @@
+* {
+  font-family:
+    FontAwesome, "FiraCode Nerd Font Mono", "Microsoft YaHei",
+    "Noto Color Emoji";
+  font-size: 14px;
+}
+
+window#waybar {
+  background-color: #0e1116;
+  color: #ffffff;
+  transition-property: background-color;
+  transition-duration: 0.5s;
+}
