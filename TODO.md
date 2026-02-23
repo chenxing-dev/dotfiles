@@ -1,9 +1,8 @@
 # TODO
 
-## Fixes for F1-F12 keys not working
+## Setup script
 
-- [ ] Check Fn key settings in BIOS/UEFI
-- [ ] Try toggling Fn lock (usually Fn + Esc)
+- [ ] feat: remove the --all flag in `setup` script, and instead prompt the user to select which packages to install
 
 ## Niri 
 
