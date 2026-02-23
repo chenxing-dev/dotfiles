@@ -11,3 +11,7 @@ window#waybar {
   transition-property: background-color;
   transition-duration: 0.5s;
 }
+
+#clock {
+  padding: 3px 0 0 0;
+}
