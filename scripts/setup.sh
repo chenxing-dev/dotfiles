@@ -6,6 +6,13 @@
 # "strict mode"
 set -euo pipefail
 
+# This script relies on bash features (arrays, BASH_SOURCE, process substitution).
+# If invoked as `sh scripts/setup.sh ...`, it may silently mis-detect paths.
+if [[ -z "${BASH_VERSION:-}" ]]; then
+	echo "[ERROR] This script must be run with bash (e.g. ./scripts/setup.sh ...), not sh." >&2
+	exit 2
+fi
+
 # Configuration
 # Get repository root directory
 HOME_DIR=${HOME}
@@ -14,6 +21,7 @@ STOW_DIR="${REPO_ROOT}/packages"
 SCRIPT_DIR="${REPO_ROOT}/scripts"
 declare -a PACKAGES=()
 ALL=false
+declare -a MISSING_PACKAGES=()
 
 # Colors
 RED='\033[0;31m'
@@ -75,20 +83,20 @@ stow_package() {
 
 	if [[ ! -d "${STOW_DIR}/${package}" ]]; then
 		warn "Package ${package} not found. Skipping."
-		return
+		MISSING_PACKAGES+=("$package")
+		return 1
 	fi
 
 	backup_files "${package}"
 
 	info "Deploying ${package}..."
-	${STOW_CMD} --restow "${package}" || error "Failed to deploy ${package}"
+	"${STOW_CMD[@]}" --restow "${package}" || error "Failed to deploy ${package}"
 
 	# Run package-specific post-stow hook if exists
 	local post_stow_hook="${STOW_DIR}/${package}/post-stow.sh"
 	if [[ -f "$post_stow_hook" ]]; then
 		info "Running post-stow hook for ${package}..."
 		bash "$post_stow_hook"
-		rm -f "$HOME/post-stow.sh"
 	fi
 }
 
@@ -134,7 +142,15 @@ done
 
 # Configuration
 BACKUP_DIR="${HOME_DIR}/dotfiles_backup"
-STOW_CMD="stow --verbose=1 --adopt --dir=${STOW_DIR} --target=${HOME_DIR}"
+STOW_CMD=(
+	stow
+	--verbose=1
+	--adopt
+	"--dir=${STOW_DIR}"
+	"--target=${HOME_DIR}"
+	"--ignore=README\\.md$"
+	"--ignore=post-stow\\.sh$"
+)
 
 # Main execution
 cd "${SCRIPT_DIR}" || error "Failed to access script directory"
@@ -158,7 +174,11 @@ if [[ ${#PACKAGES[@]} -eq 0 ]]; then
 fi
 
 for package in "${PACKAGES[@]}"; do
-	stow_package "${package}"
+	stow_package "${package}" || true
 done
+
+if [[ ${#MISSING_PACKAGES[@]} -gt 0 ]]; then
+	error "Missing packages: ${MISSING_PACKAGES[*]}"
+fi
 
 info "Dotfiles setup completed successfully!"
