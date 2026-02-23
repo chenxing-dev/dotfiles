@@ -2,7 +2,7 @@
 
 ## Setup script
 
-- [ ] feat: remove the --all flag in `setup` script, and instead prompt the user to select which packages to install
+- [x] feat: remove the --all flag in `setup` script
 
 ## Niri 
 

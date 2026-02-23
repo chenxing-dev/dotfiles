@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Dotfiles Setup Script
-# Usage: ./setup.sh [--all] [package1 package2 ...]
+# Usage: ./setup.sh [package1 package2 ...]
 
 # "strict mode"
 set -euo pipefail
@@ -20,7 +20,6 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 STOW_DIR="${REPO_ROOT}/packages"
 SCRIPT_DIR="${REPO_ROOT}/scripts"
 declare -a PACKAGES=()
-ALL=false
 declare -a MISSING_PACKAGES=()
 
 # Colors
@@ -106,7 +105,6 @@ Dotfiles Setup Script
 Usage: $0 [OPTIONS] [PACKAGES...]
 
 Options:
-  --all         Deploy all available packages
   --home-dir    Specify the home directory
   --help        Show this help message
 
@@ -118,10 +116,6 @@ EOF
 # Parse arguments
 while [[ $# -gt 0 ]]; do
 	case "$1" in
-	--all)
-		ALL=true
-		shift
-		;;
 	--home-dir)
 		HOME_DIR="$2"
 		shift 2
@@ -152,26 +146,16 @@ STOW_CMD=(
 	"--ignore=post-stow\\.sh$"
 )
 
+if [[ ${#PACKAGES[@]} -eq 0 ]]; then
+	show_help
+	exit 0
+fi
+
 # Main execution
 cd "${SCRIPT_DIR}" || error "Failed to access script directory"
 
 install_stow
 mkdir -p "${BACKUP_DIR}"
-
-if $ALL; then
-	mapfile -t PACKAGES < <(
-		find "${STOW_DIR}" \
-			-mindepth 1 \
-			-maxdepth 1 \
-			-type d \
-			-printf '%f\n'
-	)
-fi
-
-if [[ ${#PACKAGES[@]} -eq 0 ]]; then
-	show_help
-	error "No packages specified. Use --all or list packages."
-fi
 
 for package in "${PACKAGES[@]}"; do
 	stow_package "${package}" || true
