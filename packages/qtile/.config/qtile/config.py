@@ -189,7 +189,7 @@ layouts = [
 ]
 
 widget_defaults = dict(
-    font="FiraCode Nerd Font",
+    font="FiraCode Nerd Font,Microsoft YaHei",
     fontsize=12,
     padding=4,
 )
@@ -219,9 +219,9 @@ screens = [
                 # widget.StatusNotifier(),
                 widget.Systray(),
                 widget.Wlan(
-                    format='{essid}'
+                    format='   {essid}'
                 ),
-                widget.Clock(format="%a %d %b %H:%M"),
+                widget.Clock(format="%Y年%m月%e日%H时%M分  "),
                 # widget.QuickExit(),
             ],
             28,

@@ -10,18 +10,18 @@
 
 - [x] Rice Mako notifications with custom colors
 
+### iwctl (wireless management)
+
+- [x] Switch to `iwctl` from `nmcli`
+
 ### Waybar (status bar)
 
-- [ ] Rice Waybar with custom modules and styling
+- [x] Rice Waybar with custom modules and styling
   - [x] Style the bar with a minimalistic look
   - [x] remove CPU and memory modules
   - [x] clock: Calendar in Chinese
-  - [ ] add disk module
-  - [ ] tray: remove the nmcli icon
-  - [ ] network: on-click to open `impala`
-  - [ ] Check out people's Waybar configs for inspiration
+  - [x] tray: remove the nmcli icon
 
-### iwctl (wireless management)
+### Qtile
 
-- [ ] Switch to `iwctl` from `nmcli`
-
+- [x] update Qtile bar to match Waybar's design
