@@ -27,6 +27,7 @@ use_dmenu_backend "$backend"
 options=(
 	" Shutdown"
 	" Reboot"
+	"󰖳 Boot Windows"
 	"󰗼 Quit session"
 )
 
@@ -56,12 +57,51 @@ quit_session() {
 	return 127
 }
 
+reboot_windows() {
+	# Generic UEFI path: set BootNext to Windows Boot Manager, then reboot.
+	if command -v efibootmgr >/dev/null 2>&1; then
+		local bootnum
+		bootnum=$(efibootmgr 2>/dev/null | sed -n 's/^Boot\([0-9A-Fa-f]\{4\}\)\*.*Windows Boot Manager.*/\1/p' | head -n1)
+		if [[ -n "$bootnum" ]]; then
+			if ! sudo -n -v >/dev/null 2>&1; then
+				local sudo_password
+				sudo_password=$(dmenu_password "[sudo] password for $USER: ") || return 1
+				[[ -z "$sudo_password" ]] && return 1
+				if ! printf '%s\n' "$sudo_password" | sudo -S -p '' -v >/dev/null 2>&1; then
+					unset sudo_password
+					if command -v notify-send >/dev/null 2>&1; then
+						notify-send "Could not schedule reboot into Windows" "Sudo authentication failed"
+					fi
+					return 1
+				fi
+				unset sudo_password
+			fi
+
+			if sudo efibootmgr -n "$bootnum"; then
+				sudo systemctl reboot && return 0
+				systemctl reboot && return 0
+				return 1
+			fi
+		fi
+		notify-send "Failed to set BootNext to Windows Boot Manager (permission denied or firmware rejected)" >&2
+	fi
+
+	if command -v notify-send >/dev/null 2>&1; then
+		notify-send "Could not schedule reboot into Windows" "Need root privileges and UEFI Windows Boot Manager"
+	fi
+	echo "Could not schedule reboot into Windows" >&2
+	return 1
+}
+
 case $selected in
 " Shutdown")
 	[[ $(confirm "Shutdown") == "Yes" ]] && systemctl poweroff
 	;;
 " Reboot")
 	[[ $(confirm "Reboot") == "Yes" ]] && systemctl reboot
+	;;
+"󰖳 Boot Windows")
+	[[ $(confirm "Boot Windows") == "Yes" ]] && reboot_windows
 	;;
 "󰗼 Quit session")
 	[[ $(confirm "Quit session") == "Yes" ]] && quit_session
