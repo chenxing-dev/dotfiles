@@ -1,0 +1,51 @@
+{
+  "workbench.colorTheme": "GitHub Light High Contrast",
+  "workbench.iconTheme": "material-icon-theme",
+  "editor.fontFamily": "'Font Awesome 7', 'FiraCode Nerd Font Mono', 'Microsoft YaHei', monospace",
+  "editor.minimap.enabled": false,
+  "editor.wordWrap": "wordWrapColumn",
+  "editor.wordWrapColumn": 100,
+  "emmet.includeLanguages": {
+    "wxml": "html"
+  },
+  "files.associations": {
+    "*.cjson": "jsonc",
+    "*.wxss": "css",
+    "*.wxs": "javascript",
+    "*.json": "json"
+  },
+  "diffEditor.ignoreTrimWhitespace": false,
+  "git.autofetch": true,
+  "github.copilot.nextEditSuggestions.enabled": true,
+  "github.copilot.enable": {
+    "*": true,
+    "plaintext": false,
+    "markdown": true,
+    "scminput": false
+  },
+  "github.copilot.chat.commitMessageGeneration.instructions": [
+    {
+      "text": "Use conventional commit message format. Types: fix, feat, build, chore, ci, docs, style, refactor, perf, test, revert. docs for documentation (README, TODO) changes. Disallow words like 'enhance', 'improve'."
+    }
+  ],
+  "editor.defaultFormatter": "oxc.oxc-vscode",
+  "oxc.enable": true,
+  "[csv]": {
+    "editor.inlayHints.maximumLength": 0
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "yzhang.markdown-all-in-one"
+  },
+  "[shellscript]": {
+    "editor.defaultFormatter": "mkhl.shfmt"
+  },
+  "[vue]": {
+    "editor.defaultFormatter": "Vue.volar"
+  }
+}
