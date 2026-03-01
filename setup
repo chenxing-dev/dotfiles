@@ -13,6 +13,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STOW_DIR="${REPO_ROOT}/packages"
 declare -a PACKAGES=()
 declare -a MISSING_PACKAGES=()
+ADOPT=false
 
 # Colors
 RED='\033[0;31m'
@@ -94,8 +95,9 @@ Dotfiles Setup Script
 Usage: $0 [OPTIONS] [PACKAGES...]
 
 Options:
-  --home-dir    Specify the home directory
-  --help        Show this help message
+  	--home-dir    Specify the home directory
+  	--adopt       Adopt existing target files into package (use with caution)
+  	--help        Show this help message
 
 Available packages:
 $(find "${STOW_DIR}" -mindepth 1 -maxdepth 1 -type d -printf '  - %f\n')
@@ -108,6 +110,10 @@ while [[ $# -gt 0 ]]; do
 	--home-dir)
 		HOME_DIR="$2"
 		shift 2
+		;;
+	--adopt)
+		ADOPT=true
+		shift
 		;;
 	--help)
 		show_help
@@ -128,12 +134,16 @@ BACKUP_DIR="${HOME_DIR}/dotfiles_backup"
 STOW_CMD=(
 	stow
 	--verbose=1
-	--adopt
 	"--dir=${STOW_DIR}"
 	"--target=${HOME_DIR}"
 	"--ignore=README\\.md$"
 	"--ignore=post-stow\\.sh$"
 )
+
+if $ADOPT; then
+	warn "--adopt enabled: existing files may be moved into this repository."
+	STOW_CMD+=(--adopt)
+fi
 
 if [[ ${#PACKAGES[@]} -eq 0 ]]; then
 	show_help
