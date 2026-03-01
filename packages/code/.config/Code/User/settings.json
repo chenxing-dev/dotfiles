@@ -12,7 +12,7 @@
     "*.cjson": "jsonc",
     "*.wxss": "css",
     "*.wxs": "javascript",
-    "*.json": "json"
+    "*.json": "jsonc"
   },
   "diffEditor.ignoreTrimWhitespace": false,
   "git.autofetch": true,
