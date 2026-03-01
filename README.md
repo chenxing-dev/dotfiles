@@ -1,27 +1,30 @@
-![Dotfiles Preview](./screenshot.png)  
+![Dotfiles Preview](./screenshot-niri.png)  
 
 ## Overview
 
-a dotfiles repository for Arch Linux using GNU Stow, with an automated setup script and `archinstall` configuration.  
+a dotfiles repository for Arch Linux using GNU Stow, with an automated setup script.  
 
-- 🖥️ **Archinstall configuration**
+
 - 🧩 **Modular organization** with GNU Stow
-- ⚡ **One-command deployment** for all or selected packages
 - 🔄 **Safe backups** before making changes
+- 🖥️ **Archinstall configuration** (DEPRECATED!)
 
 ## Repository Structure
 
 ```bash
 dotfiles/
-├── packages/          # GNU Stow-compatible directories
-│   ├── qtile/.config/qtile/ # Qtile window manager config
-│   ├── picom/.config/picom/ # Picom compositor config
+├── packages/                    # GNU Stow-compatible directories
+│   ├── dmenu/                   # Rofi/Fuzzel dmenu-style scripts
+│   ├── niri/.config/            # Niri window manager config
+│   ├── picom/.config/picom/     # Picom compositor config
+│   ├── qtile/.config/qtile/     # Qtile window manager config
+│   ├── waybar/.config/waybar/   # Waybar status bar config
 │   ├── wezterm/.config/wezterm/ # Wezterm terminal config
-│   └── ...                 # Add your own configs here
+│   └── ...                      # More packages
 ├── scripts/
-│   └── setup.sh             # Dotfiles deployment script
-├── config.json              # archinstall configuration
-└── README.md                # This documentation
+│   └── setup.sh                 # Dotfiles deployment script
+├── config.json                  # archinstall config (deprecated)
+└── README.md                    # This documentation
 ```
 
 ## Installation
@@ -33,9 +36,9 @@ dotfiles/
 
 2. **Boot into live environment**
 
-3. **Run archinstall with [preset config](https://chenxing-dev.github.io/dotfiles/config.json)**:
+3. **Run archinstall**:
    ```bash
-   archinstall --config https://chenxing-dev.github.io/dotfiles/config.json
+   archinstall
    ```
 
 ### Dotfiles setup
@@ -45,10 +48,23 @@ dotfiles/
    git clone --recurse-submodules https://github.com/chenxing-dev/dotfiles.git ~/dotfiles
    ```
 
+   If you encounter `bash: git: command not found`, you can install Git using the following command:
+   ```bash
+   pacman -S git
+   ```
+
 5. **Run the setup script**:
+
+   List available packages with:
+
    ```bash
    cd ~/dotfiles
-   ./scripts/setup.sh --all
+   ./scripts/setup.sh
+   ```
+
+   Select the packages you want to deploy. 
+   ```bash
+   ./scripts/setup.sh bash code dmenu fcitx5 firefox fuzzel mako niri wallpaper waybar wezterm yazi
    ```
    Reboot.
 
