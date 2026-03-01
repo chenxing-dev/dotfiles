@@ -13,6 +13,11 @@ else
   exit 1
 fi
 
+if ! command -v firefox >/dev/null 2>&1; then
+  echo "⚠️ Firefox not found in PATH; skipping Firefox setup."
+  exit 0
+fi
+
 # Find default profile
 getProfile() {
   if [ -f "$PROFILES_INI" ]; then
