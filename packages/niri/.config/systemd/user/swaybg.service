@@ -6,3 +6,6 @@ Requisite=graphical-session.target
 [Service]
 ExecStart=/usr/bin/swaybg -m fill -i "%h/Pictures/wallpaper.png"
 Restart=on-failure
+
+[Install]
+WantedBy=niri.service
