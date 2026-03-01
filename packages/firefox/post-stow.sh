@@ -49,22 +49,20 @@ fi
 # Find default profile
 getProfile() {
 	if [ -f "$PROFILES_INI" ]; then
-		# Extract default profile from profiles.ini
+		# Extract default profile path from profiles.ini Install section
 		local default_profile
 		default_profile=$(awk -F= '
-            /^\[Profile/ { profile = "" }
-            /^Default=1/ { default_profile = 1 }
-            /^Name=/ { name = $2 }
-            /^Path=/ { path = $2 }
-            /^Default=1.*/ && profile && path {
-                print path
-                exit
-            }
-            /^\[.*\]/ { if (default_profile && profile) print profile }
-        ' "$PROFILES_INI")
+			/^\[Install/ { in_install = 1; next }
+			/^\[/ { in_install = 0 }
+			in_install && /^Default=/ { print $2; exit }
+		' "$PROFILES_INI")
 
 		if [ -n "$default_profile" ]; then
-			echo "$PROFILE_ROOT/$default_profile"
+			if [[ "$default_profile" = /* ]]; then
+				echo "$default_profile"
+			else
+				echo "$PROFILE_ROOT/$default_profile"
+			fi
 			return
 		fi
 	fi
