@@ -1,24 +1,16 @@
 #!/usr/bin/env bash
 
 # Dotfiles Setup Script
-# Usage: ./setup.sh [package1 package2 ...]
+# Usage: ./setup [package1 package2 ...]
 
 # "strict mode"
 set -euo pipefail
 
-# This script relies on bash features (arrays, BASH_SOURCE, process substitution).
-# If invoked as `sh scripts/setup.sh ...`, it may silently mis-detect paths.
-if [[ -z "${BASH_VERSION:-}" ]]; then
-	echo "[ERROR] This script must be run with bash (e.g. ./scripts/setup.sh ...), not sh." >&2
-	exit 2
-fi
-
 # Configuration
 # Get repository root directory
 HOME_DIR=${HOME}
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STOW_DIR="${REPO_ROOT}/packages"
-SCRIPT_DIR="${REPO_ROOT}/scripts"
 declare -a PACKAGES=()
 declare -a MISSING_PACKAGES=()
 
@@ -152,7 +144,7 @@ if [[ ${#PACKAGES[@]} -eq 0 ]]; then
 fi
 
 # Main execution
-cd "${SCRIPT_DIR}" || error "Failed to access script directory"
+cd "${REPO_ROOT}" || error "Failed to access repository root"
 
 install_stow
 mkdir -p "${BACKUP_DIR}"

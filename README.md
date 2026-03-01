@@ -21,10 +21,10 @@ dotfiles/
 │   ├── waybar/.config/waybar/   # Waybar status bar config
 │   ├── wezterm/.config/wezterm/ # Wezterm terminal config
 │   └── ...                      # More packages
-├── scripts/
-│   └── setup.sh                 # Dotfiles deployment script
 ├── config.json                  # archinstall config (deprecated)
-└── README.md                    # This documentation
+├── README.md                    # This documentation
+└── setup                        # Dotfiles deployment script
+
 ```
 
 ## Installation
@@ -53,49 +53,30 @@ dotfiles/
    pacman -S git
    ```
 
+   If you have already cloned the repository without the `--recurse-submodules` flag, you can initialize and update the submodules with:
+   ```bash
+   cd ~/dotfiles
+   git submodule update --init --recursive
+   ```
+
+   If you are in the region in China and encounter issues with cloning, note that the repository is mirrored on Gitee: [https://gitee.com/dev-chenxing/dotfiles](https://gitee.com/dev-chenxing/dotfiles)
+
 5. **Run the setup script**:
 
    List available packages with:
 
    ```bash
    cd ~/dotfiles
-   ./scripts/setup.sh
+   ./setup
    ```
 
    Select the packages you want to deploy. 
    ```bash
-   ./scripts/setup.sh bash code dmenu fcitx5 firefox fuzzel mako niri wallpaper waybar wezterm yazi
+   ./setup bash code dmenu fcitx5 firefox fuzzel mako niri wallpaper waybar wezterm yazi
    ```
    Reboot.
 
 ## Usage
-
-### Deployment Options
-
-```bash
-# Deploy all configurations
-./scripts/setup.sh --all
-
-# Deploy specific packages
-./scripts/setup.sh qtile wezterm yazi
-```
-
-### Adding New Configurations
-
-1. Create a new package structure:
-   ```bash
-   mkdir -p packages/newtool/.config/newtool
-   ```
-
-2. Add your configuration files:
-   ```bash
-   cp ~/.config/newtool/config.toml packages/newtool/.config/newtool/
-   ```
-
-3. Deploy:
-   ```bash
-   ./scripts/setup.sh newtool
-   ```
 
 ### **Backup restoration**:
 
