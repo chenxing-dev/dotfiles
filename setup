@@ -92,7 +92,10 @@ stow_package() {
 	# Run package-specific post-stow hook if exists
 	local post_stow_hook="${STOW_DIR}/${package}/post-stow.sh"
 	if [[ -f "$post_stow_hook" ]]; then
-		bash "$post_stow_hook"
+		(
+			cd "${HOME_DIR}" || error "Failed to access target directory ${HOME_DIR}"
+			bash "$post_stow_hook"
+		)
 	fi
 }
 
