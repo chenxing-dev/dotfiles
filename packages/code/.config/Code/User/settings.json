@@ -47,5 +47,8 @@
   },
   "[vue]": {
     "editor.defaultFormatter": "Vue.volar"
+  },
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.autopep8"
   }
 }
