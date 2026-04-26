@@ -33,12 +33,6 @@
   "[csv]": {
     "editor.inlayHints.maximumLength": 0
   },
-  "[json]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[jsonc]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
   "[markdown]": {
     "editor.defaultFormatter": "yzhang.markdown-all-in-one"
   },
@@ -50,5 +44,7 @@
   },
   "[python]": {
     "editor.defaultFormatter": "ms-python.autopep8"
-  }
+  },
+  "editor.unicodeHighlight.ambiguousCharacters": false,
+  "workbench.externalBrowser": "firefox"
 }
