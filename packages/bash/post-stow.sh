@@ -27,6 +27,6 @@ fi
 # Append our minimal PS1 block
 cat >>"$BASHRC" <<'EOF'
 # chenxing-dev/dotfiles
-PS1='\w > ' # Minimal prompt: show only current directory like: "~ > "
+PS1='\W > ' # Minimal prompt: show only current directory like: "~ > "
 # chenxing-dev/dotfiles end
 EOF
